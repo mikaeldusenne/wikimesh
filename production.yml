@@ -1,0 +1,33 @@
+version: '3'
+services:
+  app:
+    command: "gunicorn -c backend/configunicorn.py --log-level debug backend.wsgi:app --access-logfile gunicorn.log"
+  nginx:
+    depends_on: [app]
+    networks:
+      - wikimesh_network
+    image: nginx
+    environment:
+      - PROD=1
+    volumes:
+      - "./nginx/nginx_conf:/etc/nginx:ro"
+    ports:
+      - "8111:80"
+  mongo-backups:
+    image: mikaeldusenne/wikimesh_mongo_backups
+    networks:
+      - wikimesh_network
+    build:
+      context: "./mongo/mongobackup"
+    env_file:
+      - ./mongo/.env
+      - ./mongo/mongobackup/.env
+    volumes:
+      - ./mongo/mongobackup/backups:/backup
+    depends_on:
+      - mongo
+
+      
+networks:
+  wikimesh_network:
+    driver: bridge

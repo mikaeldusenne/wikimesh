@@ -1,0 +1,39 @@
+version: '3'
+services:
+  mongo:
+    image: mongo:bionic
+    networks:
+      - wikimesh_network
+    container_name: "wikimesh_mongo_docker"
+    env_file:
+     - ./mongo/.env
+    volumes:
+      - "./mongo/volume:/data/db"
+      - "./mongo/dumps:/dumps"
+      - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - "./mongo/.dbshell:/home/mongodb/.dbshell"
+  redis:
+    image: redis:latest
+    networks:
+      - wikimesh_network
+  app:
+    depends_on: [mongo]
+    image: wikimesh-flask
+    container_name: "wikimesh_app"
+    networks:
+      - wikimesh_network
+    build:
+      context: "./backend"
+    env_file:
+      - ./mongo/.env
+      - ./backend/.env
+    volumes:
+      - "./backend:/app/backend/"
+      - "./frontend/dist:/app/backend/templates:ro"
+      - "./frontend/dist/static:/app/backend/static:ro"
+    command: "python -m backend"
+
+
+networks:
+  wikimesh_network:
+    driver: bridge
