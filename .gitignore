@@ -40,3 +40,9 @@ pnpm-debug.log*
 *~
 
 
+.npm
+.dbshell
+aws_template
+*.bin
+*.pkl
+mongo/dumps
