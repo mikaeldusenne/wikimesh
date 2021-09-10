@@ -1,4 +1,3 @@
-
 #!/bin/sh
 
 CMD="$1"
@@ -9,16 +8,19 @@ case "$CMD" in
         docker-compose -f docker-compose.yml -f production.yml up --abort-on-container-exit $@
         ;;
     dev)
-        docker-compose -f docker-compose.yml  -f development.yml -f front-end.yml up --abort-on-container-exit $@
+        docker-compose -f docker-compose.yml  -f development.yml -f frontend.yml up --abort-on-container-exit $@
         ;;
     init)
         echo "setting secrets..."
         ./init_secrets.sh
         echo "initializing frontend dependencies..."
-        docker-compose -f front-end.yml -f init_frontend.yml up --build --abort-on-container-exit $@
+        docker-compose -f frontend.yml -f init_frontend.yml up --build --abort-on-container-exit $@
         ;;
-    build*)
-        docker-compose -f front-end.yml -f build-front-end.yml up --abort-on-container-exit $@
+    update-frontend)
+        docker-compose -f frontend.yml -f update_frontend.yml up --build --abort-on-container-exit $@
+        ;;
+	build*)
+        docker-compose -f frontend.yml -f build-front-end.yml up --abort-on-container-exit $@
         ;;
     lint*)
         docker exec -it wikimesh_vuecli_1 npm run lint
@@ -48,7 +50,7 @@ case "$CMD" in
             && pip install -r backend/requirements.txt \
             ;;
     init)
-        docker-compose -f docker-compose.yml -f front-end.yml build --no-cache && \
+        docker-compose -f docker-compose.yml -f frontend.yml build --no-cache && \
             ./run.sh update && \
             ./run.sh build --build && \
             ./run.sh 
