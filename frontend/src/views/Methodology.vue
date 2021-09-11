@@ -6,7 +6,7 @@
       </b-col>
     </b-row>
     <b-row class="d-flex justify-content-center">
-      <b-col cols="6">
+      <b-col xs="12" sm="8" xl="6">
         <p>
           Le but de cet outil est de retrouver les entrées wikipédia en différentes langues pour les termes du thésaurus <a href="https://www.hetop.eu/hetop/rep/uk/MESH/" target="_blank">MeSH</a>.
         </p>
