@@ -1,7 +1,7 @@
 <template>
   <div class="container-fluid" id="explorer">
     <b-row class="justify-content-md-center">
-      <b-col class="col-md-6">
+      <b-col class="col-md-6" id="explorer-intro">
         <h1>Explorer</h1>
         <p>
           Cette section permet d'explorer les liens wikipédia retrouvés pour les concepts MeSH.
@@ -10,7 +10,7 @@
           Survolez les concepts pour voir quel terme MeSH d'un concept a permis de retrouver les articles wikipédia.
         </p>
         <p>
-          Les pilules <span class="pill pill-syn-pt">PT</span> et <span class="pill pill-syn-pt">SYN</span> indiquent si la page wikipédia a été trouvée grâce à un synonyme ou à un terme préféré MeSH.
+          Les pilules <span class="pill pill-syn-pt">PT</span> et <span class="pill pill-syn-pt">SYN</span> indiquent si la page wikipédia a été trouvée grâce à un terme préféré MeSH ou à un synonyme.
         </p>
       </b-col>
     </b-row>
@@ -54,48 +54,56 @@
         <b-card v-for="m in mesh" :key="m.id">
           <b-card-title style="display: flex; align-items: center;" class="item-title">
             <div class="pill id">{{m._id}}</div>
-            <div class="pill pill-syn-pt">{{m.wikilangs.origin.toUpperCase()}}</div>
+            <div class="pill pill-syn-pt" v-if="m.wikilangs.origin">
+              {{m.wikilangs.origin.toUpperCase()}}
+            </div>
             <div class="meshterm" data-toggle="tooltip" data-placement="top" :title="matchInfo(m)">
               {{m.langs[0].pt}}
-              <span><em style="font-size:0.9rem; color: #ddd;">{{Object.keys(m.wikilangs.langs || {}).length}}&nbsp;langues.</em></span>
-              <span class="show-details" @click="toggleDetails(m)"><font-awesome-icon :icon="m.showDetails?'eye-slash':'eye'" /></span>
+              <span><em style="font-size:0.9rem; color: #ddd;">{{m.wikilangs.langs.length}}&nbsp;langues.</em></span>
             </div>
+            <span class="show-details" @click="toggleDetails(m)" style="position: absolute; right: 1rem;" data-toggle="tooltip" data-placement="top" :title="(m.showDetails?'masquer':'afficher') + ' les détails du concept MeSH'"><font-awesome-icon :icon="m.showDetails?'eye-slash':'eye'" /></span>
           </b-card-title>
-          <b-card-body v-if="Object.keys(m.wikilangs.langs || {}).length">
-            <b-container>
-              <b-row>
-                <b-col lg="6" style="margin-bottom: 1rem; max-height: 15rem; overflow: auto;">
-                  <strong style="width: 100%;" v-if="m.showDetails">Liens:</strong>
-                  <div style="display: block;">
-                    <ul>
-                      <li v-for="l, lang in m.wikilangs.langs">
-                        <a class="wikilink" target="_blank" :href="'https://'+lang+'.wikipedia.org/wiki/'+l">[{{langFromCode(lang)}}] {{l}}</a>
-                      </li>
-                    </ul>
-                  </div>
-                </b-col>
-                <b-col class="conceptdetails" lg="6" v-if="m.showDetails" style="margin-bottom: 1rem; max-height: 15rem; overflow: auto;">
-                  <p style="margin-bottom: 0.5rem;"><strong style="width: 100%;">Détails du concept:</strong></p>
-                  
-                  <p><strong>id:&nbsp;</strong>{{m._id}}</p>
-                  <div v-for="e in m.langs" :key="e._id">
-                    <hr style="margin: 0.25rem;" />
-                    <strong>{{langFromCode(e._id)}}:&nbsp;</strong> {{e.pt}}
-                    <div v-if="e.syns.length">
-                      <em>synonyms:&nbsp;</em>
-                      <ul style="margin-bottom: 0;"><li v-for="s in e.syns">-&nbsp;{{s}}</li></ul>
-                    </div>
-                  </div>
-                </b-col>
+          
+          <b-card-body class="item-card-body">
+            <b-container class="container-item">
+              <!-- <b-row>
+              -->
+              <transition-group name="list" tag="div" class="row row-item">
                 
-              </b-row>
+                <b-col key="colMesh" class="conceptdetails list-item" lg="6" v-if="m.showDetails" style="margin-bottom: 1rem; max-height: 15rem; height: 15rem; overflow: auto;">
+                    <p style="margin-bottom: 0.5rem;"><strong style="width: 100%;">Détails du concept:</strong></p>
+                    <p><strong>id:&nbsp;</strong>{{m._id}}</p>
+                    <div v-for="e in m.langs" :key="e._id">
+                      <hr style="margin: 0.25rem;" />
+                      <strong>{{langFromCode(e._id)}}:&nbsp;</strong> {{e.pt}}
+                      <div v-if="e.syns.length">
+                        <em>synonyms:&nbsp;</em>
+                        <ul style="margin-bottom: 0;"><li v-for="s in e.syns">-&nbsp;{{s}}</li></ul>
+                      </div>
+                    </div>
+                  </b-col>
+                  
+                  <b-col key="colWikipedia" lg="6" class="linksdetails list-item" v-if="m.wikilangs.langs.length" style="margin-bottom: 1rem; max-height: 15rem; height: 15rem; overflow: auto;">
+                    <strong style="width: 100%;" v-if="m.showDetails">Liens:</strong>
+                    <div style="display: block;">
+                      <ul>
+                        <li v-for="[lang, l] in m.wikilangs.langs">
+                          <a class="wikilink" target="_blank" :href="'https://'+lang+'.wikipedia.org/wiki/'+l">[{{langFromCode(lang)}}] {{l}}</a>
+                        </li>
+                      </ul>
+                    </div>
+                  </b-col>
+                  <b-col key="colWikipedia" class="list-item" v-else>
+                    <div class="langlinks" style="margin-top: 1rem;">
+                      <ul><li>Entrée wikipédia non trouvée </li></ul>
+                    </div>
+                  </b-col>
+              </transition-group>
+
+              <!-- </b-row>
+              -->
             </b-container>
             
-          </b-card-body>
-          <b-card-body v-else>
-            <div class="langlinks" style="margin-top: 1rem;">
-              <ul><li>Entrée wikipédia non trouvée </li></ul>
-            </div>
           </b-card-body>
         </b-card>
       </b-col>
@@ -128,6 +136,7 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import axios from "axios";
 import { langCodes } from "@/langCodes.js";
+import _ from "lodash";
 
 axios.defaults.baseURL = process.env.BASE_URL;
 
@@ -207,6 +216,9 @@ export default class Explorer extends Vue {
       this.fetching = false;
       this.mesh = ans.data.data.map(e => {
         e.showDetails = false;
+        e.wikilangs.langs = _.sortBy(Object.entries(e.wikilangs.langs || {}), [
+          ([k, v]) => this.langFromCode(k).toLowerCase()
+        ])
         return e;
       })
     })
@@ -282,6 +294,7 @@ ul {
   padding: 1rem;
   border-radius: 0.25rem;
   flex-wrap: wrap;
+  margin-bottom: 0;
 }
 
 .fetching{
@@ -300,12 +313,51 @@ ul {
   cursor: pointer;
 }
 
+
+#explorer-intro p{
+  margin-bottom: 0;
+}
+
+#explorer-intro{
+  margin-bottom: 1rem;
+}
+
+.list-item {
+  display: inline-block;
+  background: white;
+  transition: all .5s;
+}
+
+.list-enter, .list-leave-to
+/* .list-complete-leave-active below version 2.1.8 */ {
+  opacity: 0;
+  /* transform: translateY(-30px); */
+}
+
+.list-leave-active {
+  position: absolute;
+}
+
 .conceptdetails{
   background-color: #ddd;
   padding: 1rem;
+  margin: 0;
+}
+
+.linksdetails{
+  padding: 1rem;
+  margin: 0;
 }
 
 .conceptdetails p{
   margin-bottom: 0;
+}
+
+.row-item{
+  margin: 0;
+}
+
+.container-item{
+  padding: 0;
 }
 </style>
