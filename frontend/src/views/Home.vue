@@ -3,7 +3,7 @@
     <div class="container">
       <h1>WikiMeSH</h1>
       <hr />
-      <h4>Outil de recherche des entrées wikipédia correspondant aux concepts MeSH</h4>
+      <h4>Outil de recherche des entrées wikipédia correspondantes aux concepts MeSH</h4>
     </div>
     <div class="container" style="margin-top: 2rem;">
       <div id="navigation-links" class="row">
