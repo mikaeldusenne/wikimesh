@@ -6,6 +6,12 @@
         <p>
           Cette section permet d'explorer les liens wikipédia retrouvés pour les concepts MeSH.
         </p>
+        <p>
+          Survolez les concepts pour voir quel terme MeSH d'un concept a permis de retrouver les articles wikipédia.
+        </p>
+        <p>
+          Les pilules <span class="pill pill-syn-pt">PT</span> et <span class="pill pill-syn-pt">SYN</span> indiquent si la page wikipédia a été trouvée grâce à un synonyme ou à un terme préféré MeSH.
+        </p>
       </b-col>
     </b-row>
 
@@ -44,23 +50,47 @@
 
     
     <b-row v-if="!error" class="justify-content-md-center" :class="{fetching: fetching}">
-      <b-col sm="12" md="8" lg="6" xl="4">
+      <b-col sm="12" md="10" lg="8" xl="6">
         <b-card v-for="m in mesh" :key="m.id">
           <b-card-title style="display: flex; align-items: center;" class="item-title">
-            <div class="id">{{m._id}}</div>
-            <div class="meshterm">
+            <div class="pill id">{{m._id}}</div>
+            <div class="pill pill-syn-pt">{{m.wikilangs.origin.toUpperCase()}}</div>
+            <div class="meshterm" data-toggle="tooltip" data-placement="top" :title="matchInfo(m)">
               {{m.langs[0].pt}}
               <span><em style="font-size:0.9rem; color: #ddd;">{{Object.keys(m.wikilangs.langs || {}).length}}&nbsp;langues.</em></span>
+              <span class="show-details" @click="toggleDetails(m)"><font-awesome-icon :icon="m.showDetails?'eye-slash':'eye'" /></span>
             </div>
           </b-card-title>
-          <b-card-body v-if="Object.keys(m.wikilangs.langs || {}).length" style="max-height: 15rem; overflow: auto;">
-            <div class="langlinks">
-              <ul>
-                <li v-for="l, lang in m.wikilangs.langs">
-                  <a class="wikilink" target="_blank" :href="'https://'+lang+'.wikipedia.org/wiki/'+l">[{{langFromCode(lang)}}] {{l}}</a>
-                </li>
-              </ul>
-            </div>
+          <b-card-body v-if="Object.keys(m.wikilangs.langs || {}).length">
+            <b-container>
+              <b-row>
+                <b-col lg="6" style="margin-bottom: 1rem; max-height: 15rem; overflow: auto;">
+                  <strong style="width: 100%;" v-if="m.showDetails">Liens:</strong>
+                  <div style="display: block;">
+                    <ul>
+                      <li v-for="l, lang in m.wikilangs.langs">
+                        <a class="wikilink" target="_blank" :href="'https://'+lang+'.wikipedia.org/wiki/'+l">[{{langFromCode(lang)}}] {{l}}</a>
+                      </li>
+                    </ul>
+                  </div>
+                </b-col>
+                <b-col class="conceptdetails" lg="6" v-if="m.showDetails" style="margin-bottom: 1rem; max-height: 15rem; overflow: auto;">
+                  <p style="margin-bottom: 0.5rem;"><strong style="width: 100%;">Détails du concept:</strong></p>
+                  
+                  <p><strong>id:&nbsp;</strong>{{m._id}}</p>
+                  <div v-for="e in m.langs" :key="e._id">
+                    <hr style="margin: 0.25rem;" />
+                    <strong>{{langFromCode(e._id)}}:&nbsp;</strong> {{e.pt}}
+                    <div v-if="e.syns.length">
+                      <em>synonyms:&nbsp;</em>
+                      <ul style="margin-bottom: 0;"><li v-for="s in e.syns">-&nbsp;{{s}}</li></ul>
+                    </div>
+                  </div>
+                </b-col>
+                
+              </b-row>
+            </b-container>
+            
           </b-card-body>
           <b-card-body v-else>
             <div class="langlinks" style="margin-top: 1rem;">
@@ -105,6 +135,7 @@ interface Mesh{
   id: string;
   title: string;
   links: string[];
+  showDetails: boolean;
 }
 
 @Component
@@ -118,7 +149,13 @@ export default class Explorer extends Vue {
   
   mesh: Array<Mesh> = [];
   search = "";
-
+  
+  toggleDetails(m){
+    m.showDetails=!m.showDetails
+    console.log(m.showDetails)
+  }
+  
+  
   @Watch('currentPage')
   cpchgd(v, oldv){
     console.log(`current page changed ${oldv} -> ${v}`)
@@ -131,7 +168,13 @@ export default class Explorer extends Vue {
     this.currentPage = 1;
     this.fetchData();
   }
-
+  
+  matchInfo(m){
+    if(m.wikilangs){
+      return `match: (${this.langFromCode(m.wikilangs.lang_match)}) ${m.wikilangs.term_match}`
+    }
+  }
+  
   langFromCode(c){
     // console.log("LANGCODES")
     // console.log(langCodes)
@@ -159,10 +202,13 @@ export default class Explorer extends Vue {
     }})
     .then(ans => {
       console.log('MESH fetched')
-      // console.log(ans.data)
+      console.log(ans.data)
       this.nMesh = ans.data.count
       this.fetching = false;
-      this.mesh = ans.data.data
+      this.mesh = ans.data.data.map(e => {
+        e.showDetails = false;
+        return e;
+      })
     })
     .catch(err => {
       console.log(err);
@@ -188,37 +234,48 @@ body {
   background: rgb(244, 225, 250) !important;
 }
 .meshterm{
-  margin: 0.5rem;
+  margin: 0.5rem 0.25rem;
 }
-.id{
+
+.pill{
   padding: 0.375rem 0.5rem;
   border-radius: 0.2rem;
-  margin: 0.5rem;
-  background: #ccc;
-  color: #222;
+  margin: 0.5rem 0.25rem;
   font-size: 0.875rem;
   text-align: center;
   align: middle;
+  color: #222;
 }
+
+.pill-syn-pt{
+  background: #ada;
+}
+
+.id{
+  background: #ccc;
+}
+
 .loading{
   color: #aaa;
 }
+
 #explorer a.wikilink{
   color: #222;
 }
-div.langlinks{
-  display: flex;
-  justify-content: left;
-}
+
+
 ul {
   list-style-type: none;
 }
+
 .card-body{
   padding: 0;
 }
+
 .card{
   margin-bottom: 1rem;
 }
+
 .item-title{
   background: #666;
   color: #fff;
@@ -231,4 +288,24 @@ ul {
   opacity: 0.5 !important;
 }
 
+.show-details{
+  font-size: 0.9rem;
+  margin: 0.25rem;
+  padding: 0.5rem;
+  padding-top: 0.625rem;
+  border: 1px solid #444;
+  border-radius: 0.2rem;
+  background-color: #444;
+  color: #ddd;
+  cursor: pointer;
+}
+
+.conceptdetails{
+  background-color: #ddd;
+  padding: 1rem;
+}
+
+.conceptdetails p{
+  margin-bottom: 0;
+}
 </style>
