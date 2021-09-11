@@ -72,7 +72,10 @@ export default class Stats extends Vue {
 
 
   get top10lang(){
-    return this.stats.langs.slice(0, 10).map(e => e[0] ).map(e => langCodes.find(ee => ee.code==e).name)
+    return this.stats.langs.slice(0, 10).map(e => e[0] ).map(e => {
+      const code = langCodes.find(ee => ee.code==e)
+      return code?code.name:e
+    })
   }
   prettyN(n) {
     return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "&nbsp;");
