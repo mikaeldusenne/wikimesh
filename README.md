@@ -1,24 +1,6 @@
-# Creating a project
+# WikiMeSH
 
-## First run
+Detection of wikipedia pages in different languages for MeSH concepts
 
-edit the desired node dependencies in frontend/init.sh
+https://mikaeldusenne.com/wikimesh/
 
-run:
-
-```
-# initial setup on first run
-./run.sh init
-
-# only for building the frontend when you change it
-./run.sh build
-
-# run the project in production mode
-./run.sh prod
-```
-
-for a development environment:
-
-```
-./run.sh dev
-```
