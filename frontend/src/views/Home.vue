@@ -1,139 +1,36 @@
 <template>
-  <div class="container">
-    <b-row class="justify-content-md-center">
-      <b-col class="col-md-12">
-        <div class="alert text-light bg-dark">
-          <h1>Traducteur MeSH</h1>
-        </div>
-          <h5>Cet outil recherche des traductions de concepts MeSH via les liens linguistiques de wikipédia.</h5>
-      </b-col>
-    </b-row>
-
-    <div class="row justify-content-md-center" style="margin: 1rem 0;" @keyup.enter="searchData">
-      <b-col sm="11" md="10" lg="8" xl="6">
-        <div class="form-check">
-          <input type="checkbox" class="form-check-input"  v-model="filterOnlyNonEmpty" />
-          <label>
-            Masquer les entrées vides
-          </label>
-        </div>
-        
-        <div class="input-group">
-          <input
-            type="text"
-            maxlength="30"
-            class="form-control"
-            placeholder="recherche en anglais / ID MeSH"
-            v-model="search"
-          />
-          <div class="input-group-append">
-            <button
-              @click="searchData"
-              class="btn btn-outline-secondary"
-              type="button"
-            >
-              rechercher
-            </button>
-          </div>
-        </div>
-        
-
-      </b-col>
+  <div class="jumbotron">
+    <div class="container">
+      <h1>WikiMeSH</h1>
+      <hr />
+      <h4>Outil de recherche des entrées wikipédia correspondant aux concepts MeSH</h4>
     </div>
-
-    <b-row style="position: sticky; top: 0; z-index: 9000;">
-      <b-pagination
-        class="pagination"
-        style="display: flex; justify-content: center;"
-        v-model="currentPage"
-        :total-rows="nMesh"
-        :per-page="perPage"
-      ></b-pagination>
-    </b-row>
-    
-    <b-row class="justify-content-md-center">
-      <b-col sm="11" md="10" lg="8" xl="6">
-        <b-card v-for="m in mesh" :key="m.id">
-          <b-card-title style="display: grid; grid-template-columns: 30% 70%; align-items: center;">
-            <span class="id">{{m._id}}</span>
-            <span>{{m.title}}</span>
-          </b-card-title>
-          <b-card-body>
-            <ul v-if="Object.keys(m.links).length" style="max-height: 8rem; overflow: auto;">
-              <li v-for="l, lang in m.links">
-                <a class="wikilink" target="_blank" :href="'https://'+lang+'.wikipedia.org/wiki/'+l">({{lang}}) {{l}}</a>
-              </li>
-            </ul>
-            <div v-else>
-              Entrée wikipédia non trouvée 
-            </div>
-          </b-card-body>
-        </b-card>
-      </b-col>
-    </b-row>
+    <div class="container" style="margin-top: 2rem;">
+      <div id="navigation-links" class="row">
+        <div class="col-md-4">
+          <router-link class="btn btn-secondary navlink" to="/explorer">Explorer&nbsp;»</router-link>
+          <!-- <a class="btn btn-secondary" href="/explorer" role="button">Explorer&nbsp;»</a> -->
+        </div>
+        <div class="col-md-4">
+          <router-link class="btn btn-secondary navlink" to="/methodology">Méthodologie&nbsp;»</router-link>
+        </div>
+        <div class="col-md-4">
+          <router-link class="btn btn-secondary navlink" to="/statistics">Statistiques&nbsp;»</router-link>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
-import axios from "axios";
-
-axios.defaults.baseURL = process.env.BASE_URL;
-
-interface Mesh{
-  id: string;
-  title: string;
-  links: string[];
-}
+import { Component, Vue } from "vue-property-decorator";
 
 @Component
 export default class Home extends Vue {
-  nMesh = 0;
-  perPage = 10;
-  currentPage = 1;
-  filterOnlyNonEmpty = true;
-  
-  mesh: Array<Mesh> = [];
-  search = "";
-
-  @Watch('currentPage')
-  cpchgd(v){
-    this.fetchData(v);
-  }
-  
-  @Watch('filterOnlyNonEmpty')
-  oechgd(v){
-    this.fetchData(v);
-  }
-
-  searchData(){
-    this.currentPage = 0;
-    this.fetchData(1);
-  }
-  
-  fetchData(page){
-    axios
-    .get("/api/mesh", {params: {
-      from: (page-1) * this.perPage,
-      limit: this.perPage,
-      search: this.search || null,
-      filterOnlyNonEmpty: this.filterOnlyNonEmpty,
-    }})
-    .then(ans => {
-      console.log('MESH')
-      console.log(ans.data)
-      this.nMesh = ans.data.count
-      this.mesh = ans.data.data
-    })
-    .catch(console.log);
-  }
-  mounted() {
-    this.fetchData(1);
-  }
 }
 </script>
 
-<style>
+<style scoped>
 body {
   background: #f7f7f7 !important;
 }
@@ -161,5 +58,25 @@ span.id{
 }
 .wikilink{
   color: red;
+}
+
+#navigation-links{
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  /* gap: 2rem; */
+}
+
+#navigation-links a.navlink{
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.375rem;
+  padding: 2rem 1rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.jumbotron {
+  padding: 2rem 1rem;
 }
 </style>

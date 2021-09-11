@@ -4,6 +4,7 @@ from flask_caching import Cache
 import logging
 from os.path import join, dirname
 import json
+import re
 import numpy as np
 import pandas as pd
 import traceback
@@ -46,18 +47,18 @@ logging_setup(".")
 
 ####################
 
-@cache.memoize(6000000)
-def query_wiki_langs(search):
-    return db.db.mesh.find_one({'title': search}).get("links", []) # ftc.query_wiki_langs(search)
+# @cache.memoize(6000000)
+# def query_wiki_langs(search):
+#     return db.db.mesh.find_one({'title': search}).get("links", []) # ftc.query_wiki_langs(search)
 
 
-def gen_filled_mesh():
-    return list(sorted(
-        db.db.mesh.find(),
-        key=lambda e: ((0 if e["title"][0].lower() in "azertyuiopsqdfghjklmwxcvbn" else 1), e["title"])
-    ))
+# def gen_filled_mesh():
+#     return list(sorted(
+#         db.db.mesh.find(),
+#         key=lambda e: ((0 if e["title"][0].lower() in "azertyuiopsqdfghjklmwxcvbn" else 1), e["title"])
+#     ))
 
-filled_mesh = gen_filled_mesh()
+# filled_mesh = gen_filled_mesh()
 
 ####################
 
@@ -66,34 +67,54 @@ flsk = Blueprint(
     static_folder='./backend/static',
 )
 
-@flsk.route("/api/mesh", methods=["GET"])
-def get_mesh():
-    filter_non_empty = request.args.get('filterOnlyNonEmpty', False)
-    start = int(request.args.get('from', 0))
-    n = int(request.args.get('limit', 10))
-    search = request.args.get('search')
-    print("SEARCH", start, n, search)
-    ans = filled_mesh
+@cache.memoize(6000000)
+def _get_mesh(filter_non_empty, start, n, search):
+    aggmatch = {}
     
     if filter_non_empty:
-        ans = [e for e in ans if len(e['links'])]
+        aggmatch.update({"wikilangs.langs": {"$ne": None}})
     
     if search is not None and len(search) > 0:
-        ans = [
-            e for e in ans
-            if re.match(h.prepare_user_input_search_regex(search), e['title'], re.IGNORECASE)
-            or re.match(h.prepare_user_input_search_regex(search), e['id'], re.IGNORECASE)
-        ]
+        search_re = re.compile(h.prepare_user_input_search_regex(search), re.IGNORECASE)
+        aggmatch.update({
+            "$or": [
+                {"langs": {"$elemMatch": {"pt": {'$regex': search_re}}}},
+                {'_id': {"$regex": search_re}}
+            ]
+        })
 
-    print("TOTAL", len(ans))
-    return jsonify({"count": len(ans), "data": ans[start: start+n]}), 200
+    n_documents = db.db.mesh_view.count_documents(aggmatch)
+    
+    agg = [
+        {
+            "$match": aggmatch
+        },
+        {
+            "$skip": start
+        },
+        {
+            "$limit": n
+        }
+    ]
+    ans = list(db.db.mesh_view.aggregate(agg))
+    
+    print("TOTAL", n_documents)
+    return {"count": n_documents, "data": ans}
+    
 
+@flsk.route("/api/mesh", methods=["GET"])
+def get_mesh():
+    args = dict(
+        filter_non_empty = request.args.get('filterOnlyNonEmpty', "false") == "true",
+        start = int(request.args.get('from', 0)),
+        n = int(request.args.get('limit', 10)),
+        search = request.args.get('search', ""),
+    )
+    print("**************************")
+    pprint(args)
+    return jsonify(_get_mesh(**args))
 
-@flsk.route('/pictures/<path:path>')
-def send_pic(path):
-    return send_from_directory('backend/pictures', path)
-
-
+@cache.memoize(6000000)
 @flsk.route('/api/mesh-stats')
 def mesh_stats():
     return jsonify(db_exporter.mesh_stats())

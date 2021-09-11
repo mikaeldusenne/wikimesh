@@ -2,10 +2,13 @@ import json
 from enum import Enum
 from typing import List, Set, Dict, Tuple, Optional, Union, NewType, Any
 import attr
+import cattr
 from pprint import pprint
 import flask_login
 import traceback
 
+
+conv = cattr.Converter()
 
 class ElementCannotBeUsedForMongoSchemaCreationError(Exception): pass
 
@@ -48,11 +51,6 @@ class V():
                 d[k] = v.toBsonDict()
             elif isinstance(v, Enum):
                 d[k] = {'_type': 'enum', 'data': str(v)}
-                # d[k] = v.value
-            names = [e for e in attr.fields(Project)]
-            if k in names and [e for e in attr.fields(Project) if e.name==k][0].type == float: # MongoDB does not appreciate to be fed ints instead of floats...
-                d[k] = float(k)
-
         return ({
             **{'_type': str(type(self).__name__)},
             **d
@@ -172,13 +170,23 @@ class V():
             raise ex
 
 
-UserId = str
+@attr.s(auto_attribs=True)
+class Row(V):
+    idmesh: str
+    lang: str
+    label: str
+    type_label: str
+
+
 
 @attr.s(auto_attribs=True)
-class User(flask_login.UserMixin):
-    id: UserId
-    password: str
-    email: str
-    admin: attr.ib(default=False)
-    def __repr__(self):
-        return f'{self.id} (self.email)'
+class MeshLang(V):
+    id: str
+    pt: str
+    syns: List[str]
+
+    
+@attr.s(auto_attribs=True)
+class Mesh(V):
+    id: str
+    langs: List[MeshLang]

@@ -1,11 +1,12 @@
 from pymongo import MongoClient
+from pymongo import InsertOne, DeleteMany, ReplaceOne, UpdateOne
 from bson.json_util import loads, dumps
 import yaml
 from os import environ
 from pprint import pprint
 from dotenv import load_dotenv
-import pandas as pd
 
+from backend.src.pytypes import conv, V
 from backend.src import helpers as h
 
 
@@ -30,5 +31,46 @@ def connect(
 
 def get_mesh_links(m):
     return db.mesh.find_one({"_id": m['id']}, {"_id": 0, "links": 1})['links']
+
+
+def get_mesh(id):
+    ans = db.mesh.find_one({'_id': id})
+    if ans is not None:
+        return V.decode(ans)
+
+
+def bulk_insert(col, l):
+    col.bulk_write([InsertOne(e.toBsonDict()) for e in l])
+
+
+def create_indexes():
+    db.mesh.create_index(
+        [
+            ("_id", 1),
+            ("lang", 1),
+        ],
+        unique=True
+    )
+
+
+def create_views():
+    db.command({
+        "create": "mesh_view",
+        "viewOn": "mesh", 
+        "pipeline": [
+            {
+                "$lookup": {
+                    "from": "wikimesh",
+                    "localField": "_id",
+                    "foreignField": "_id",
+                    "as": "wikilangs",
+                }
+            },
+            {
+                "$unwind": "$wikilangs"
+            }
+        ]
+    })
+    # db.db.mesh_view.find_one()
 
 connect()

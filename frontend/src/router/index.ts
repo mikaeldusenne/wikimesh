@@ -2,6 +2,8 @@ import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
 import Stats from "../views/Stats.vue";
+import Explorer from "../views/Explorer.vue";
+import Methodology from "../views/Methodology.vue";
 
 Vue.use(VueRouter);
 
@@ -12,9 +14,19 @@ const routes: Array<RouteConfig> = [
     component: Home
   },
   {
-    path: "/stats",
+    path: "/statistics",
     name: "Stats",
     component: Stats
+  },
+  {
+    path: "/explorer",
+    name: "Explorer",
+    component: Explorer
+  },
+  {
+    path: "/methodology",
+    name: "Methodology",
+    component: Methodology
   },
 ];
 

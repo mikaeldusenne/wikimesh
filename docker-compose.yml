@@ -12,6 +12,8 @@ services:
       - "./mongo/dumps:/dumps"
       - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - "./mongo/.dbshell:/home/mongodb/.dbshell"
+    ports:
+      - "${MONHO_PORT:-27017}:27017"
   redis:
     image: redis:latest
     networks:
@@ -29,6 +31,7 @@ services:
       - ./backend/.env
     volumes:
       - "./backend:/app/backend/"
+      - "./logs:/app/logs/"
       - "./frontend/dist:/app/backend/templates:ro"
       - "./frontend/dist/static:/app/backend/static:ro"
     command: "python -m backend"

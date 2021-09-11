@@ -77,9 +77,17 @@ def mesh_report():
     plot_hist_links()
 
 
+def keys_if_not_None(e):
+    if e is not None:
+        return list(e.keys())
+    else:
+        return []
+
 @cache
 def mesh_stats():
-    all_links = [e['links'] for e in db.db.mesh.find()]
+    all_links = [keys_if_not_None(e["langs"]) for e in db.db.wikimesh.find({}, {"_id": 0, "langs": 1})]
+    len([e for e in all_links if len(e) > 0])
+    
     lens = list(map(len, all_links))
     return {
         # "all_links": [list(e.keys()) for e in all_links],
@@ -89,7 +97,7 @@ def mesh_stats():
             reverse=False
         ),
         "langs": sorted(
-            [e for e in Counter([ee for e in all_links for ee in e.keys()]).items()],
+            [e for e in Counter([ee for e in all_links for ee in e]).items()],
             key=lambda e: e[1],
             reverse=True
         ),
