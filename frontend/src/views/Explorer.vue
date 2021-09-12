@@ -14,40 +14,102 @@
         </p>
       </b-col>
     </b-row>
+    
+    <div class="row justify-content-md-center" style="margin: 1rem;" @keyup.enter="searchData" v-on:submit.prevent>
+      <b-col sm="12" md="8" lg="6" xl="4" >
+        <div class="container-fluid form">
+          <transition-group name="list-form" tag="form">
 
-    <div class="row justify-content-md-center" style="margin: 1rem 0 2rem 0;" @keyup.enter="searchData">
-      <b-col sm="12" md="8" lg="6" xl="4">
-        <div class="form-check">
-          <label for="inputhideempty">
-            <input id="inputhideempty" type="checkbox" class="form-check-input"  v-model="filterOnlyNonEmpty" />
-            Masquer les entrées vides
-          </label>
+            <div key="A" class="row-mb-2 form-check list-item-form">
+              <div class="input-group" style="padding: 0.5rem 0.375rem;">
+                <label>
+                  <input type="checkbox" class="form-check-input"  v-model="filterOnlyNonEmpty" />
+                  Masquer les entrées vides
+                </label>
+              </div>
+            </div>
+            
+            <div key="B" class="row mb-2 list-item-form">
+              <div class="input-group">
+                <input
+                  id="searchform"
+                  type="text"
+                  maxlength="30"
+                  class="form-control"
+                  placeholder="recherche en anglais / ID MeSH"
+                  v-model="search"
+                />
+                <div class="input-group-append">
+                  <button
+                    @click="searchData"
+                    class="btn btn-outline-secondary"
+                    type="button"
+                  >
+                    rechercher
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div key="C" v-if="showAdvancedSearch"
+                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Langue du concept ayant permis de trouver les articles">
+              <label for="lang-match-search" class="col-sm-2 col-form-label">Langue&nbsp;:</label>
+              <div class="col-sm-10">
+                <b-form-select
+                  id="lang-match-search"
+                  v-model="langMatchSearch"
+                  :options="langMatchOptions"
+                  @change="searchData"
+                  class="form-control form-control"
+                />
+              </div>
+            </div>
+            
+            <div key="D" v-if="showAdvancedSearch"
+                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Filtrer les match par PT / SYN">
+              <label for="ptsyn-match-search" class="col-sm-2 col-form-label">Type&nbsp;:</label>
+              <div class="col-sm-10">
+                <b-form-select
+                  id="ptsyn-match-search"
+                  v-model="ptsynMatchSearch"
+                  :options="ptsynMatchOptions"
+                  @change="searchData"
+                  class="form-control form-control"
+                />
+              </div>
+            </div>
+            <hr key="Z" v-if="showAdvancedSearch"/>
+            <div key="E" v-if="showAdvancedSearch"
+                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Filtrer les match par PT / SYN">
+              <label for="langview" class="col-sm-3 col-form-label">Voir&nbsp;seulement&nbsp;:</label>
+              <div class="col-sm-9">
+                <b-form-select
+                  id="langview"
+                  v-model="langView"
+                  :options="langViewOptions"
+                  class="form-control form-control"
+                />
+              </div>
+            </div>
+
+            <div key="F" class="list-item-form" style="margin-top: 1rem;">
+              <em v-if="!fetching">{{nMesh}} document{{nMesh>1?'s':''}}.</em>
+              <em v-else>recherche...</em>
+              <div style="float: right;">
+                <em style="color: #555; text-decoration: underline; cursor: pointer;"
+                    @click="toggleAdvancedSearch">
+                  {{showAdvancedSearch?"recherche simplifiée":"recherche avancée"}}
+                </em>
+              </div>
+            </div>
+            
+            
+          </transition-group>
+
         </div>
-        
-        <div class="input-group">
-          <input
-            type="text"
-            maxlength="30"
-            class="form-control"
-            placeholder="recherche en anglais / ID MeSH"
-            v-model="search"
-          />
-          <div class="input-group-append">
-            <button
-              @click="searchData"
-              class="btn btn-outline-secondary"
-              type="button"
-            >
-              rechercher
-            </button>
-          </div>
-        </div>
-        
-        <em v-if="!fetching">{{nMesh}} documents.</em>
-        <em v-else>recherche...</em>
       </b-col>
     </div>
-
+    
     
     <b-row v-if="!error" class="justify-content-md-center" :class="{fetching: fetching}">
       <b-col sm="12" md="10" lg="8" xl="6">
@@ -87,7 +149,7 @@
                     <strong style="width: 100%;" v-if="m.showDetails">Liens:</strong>
                     <div style="display: block;">
                       <ul>
-                        <li v-for="[lang, l] in m.wikilangs.langs">
+                        <li v-for="[lang, l] in filterWiki(m.wikilangs.langs)" :class="{match: m.wikilangs.lang_match == lang}">
                           <a class="wikilink" target="_blank" :href="'https://'+lang+'.wikipedia.org/wiki/'+l">[{{langFromCode(lang)}}] {{l}}</a>
                         </li>
                       </ul>
@@ -155,13 +217,82 @@ export default class Explorer extends Vue {
   filterOnlyNonEmpty = true;
   error = null;
   fetching = false;
+  showAdvancedSearch = false;
+  langMatchSearch = null;
+  ptsynMatchSearch = null;
+  langView = null;
   
+  languages: any[] = [];
+
+  get langMatchOptions(){
+    return [
+      {text: "toutes les langues", value: null},
+      {text: "tout sauf l'anglais", value: "no-english"},
+    ].concat(_.sortBy(
+      this.languages.map(e => {
+        return {
+          text: this.langFromCode(e),
+          value: e,
+        }
+      }),
+      [e => e.text.toLowerCase()]
+    ))
+  }
+  
+  
+  get langViewOptions(){
+    return [
+      {text: "toutes les langues", value: null},
+      {text: "tout sauf l'anglais", value: "no-english"},
+    ].concat(_.sortBy(
+      this.languages.map(e => {
+        return {
+          text: this.langFromCode(e),
+          value: e,
+        }
+      }),
+      [e => e.text.toLowerCase()]
+    ))
+  }
+  
+  filterWiki(langs){
+    if(this.langView == null){
+      return langs;
+    }else{
+      return langs.filter(([lang, l]) => (this.langView == "no-english" && lang != "en") || (lang == this.langView))
+    }
+  }
+  
+  ptsynMatchOptions = [
+    {
+      text: "PT + SYN",
+      value: null
+    }, {
+      text: "PT",
+      value: "pt"
+    }, {
+      text: "SYN",
+      value: "syn"
+    }
+  ]
+
   mesh: Array<Mesh> = [];
   search = "";
   
+  toggleAdvancedSearch(){
+    
+    this.showAdvancedSearch = !this.showAdvancedSearch;
+    localStorage.setItem("showAdvancedSearch", this.showAdvancedSearch)
+    if(!this.showAdvancedSearch){
+      this.ptsynMatchSearch = null;
+      this.langMatchSearch = null;
+      this.langView = null;
+    }
+  }
+  
   toggleDetails(m){
     m.showDetails=!m.showDetails
-    console.log(m.showDetails)
+    // console.log(m.showDetails)
   }
   
   
@@ -193,6 +324,9 @@ export default class Explorer extends Vue {
 
   searchData(){
     // this.currentPage = 1;
+    if(this.$route.query.search != this.search){
+      this.$router.replace({path: this.$route.path, query: {...this.$route.query, ...{search: this.search}}}).catch(console.log)
+    }
     this.fetchData();
   }
   
@@ -207,6 +341,8 @@ export default class Explorer extends Vue {
       from: (page-1) * this.perPage,
       limit: this.perPage,
       search: this.search || null,
+      langMatchSearch: this.langMatchSearch,
+      ptsynMatchSearch: this.ptsynMatchSearch,
       filterOnlyNonEmpty: this.filterOnlyNonEmpty,
     }})
     .then(ans => {
@@ -228,10 +364,19 @@ export default class Explorer extends Vue {
       this.error=err.response.data;
     });
   }
+
+  fetchLanguages(){
+    axios.get('api/languages').then(e => {this.languages = e.data;}).catch(console.log)
+  }
+
   mounted() {
     this.search = (this.$route.query.search as string) || "";
+    this.showAdvancedSearch = JSON.parse(localStorage.getItem('showAdvancedSearch')) || this.showAdvancedSearch
+    console.log(this.$route)
     this.fetchData();
+    this.fetchLanguages();
   }
+
 }
 </script>
 
@@ -270,6 +415,10 @@ body {
 
 .loading{
   color: #aaa;
+}
+
+a{
+  color: #222;
 }
 
 #explorer a.wikilink{
@@ -339,6 +488,23 @@ ul {
   position: absolute;
 }
 
+/*  ----------------  */
+
+.list-item-form {
+  transition: all .25s;
+}
+
+.list-form-enter, .list-form-leave-to{
+  opacity: 0;
+  transform: translateY(-30px);
+}
+
+.list-form-leave-active {
+  position: absolute;
+}
+
+/*  ----------------  */
+
 .conceptdetails{
   background-color: #ddd;
   padding: 1rem;
@@ -360,5 +526,16 @@ ul {
 
 .container-item{
   padding: 0;
+}
+
+li.match a{
+  font-weight: 800;
+}
+
+.form{
+  background-color: #eee;
+  border: 1px solid #aaa;
+  padding: 1rem;
+  border-radius: 0.5rem;
 }
 </style>

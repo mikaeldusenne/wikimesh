@@ -1,3 +1,4 @@
+import re
 from itertools import islice, chain
 import traceback
 from math import floor, ceil
@@ -128,12 +129,19 @@ def retry_with_delay(f, retry=5, retry_delay=1, delay_increment_factor=1.5, mess
             raise ex from None
 
 
+def replace_all(l, e, f):
+    return [
+        e if f(ee) else ee
+        for ee in l
+    ]
+
+
 def prepare_user_input_search_regex(s):
+    print(s, re.escape(s))
     return ".*" + ".*".join([
         e for e in
-        "".join([
-            ee for ee in s
-            if ee.isalnum() or ee == ' '
-        ]).strip()[:75].split(' ')
+        "".join(replace_all(
+            re.escape(s), ' ', lambda ee: not (ee.isalnum() or ee in "\\-_()")
+        )).strip()[:75].split(' ')
         if len(e)
     ]) + ".*"

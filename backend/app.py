@@ -68,21 +68,40 @@ flsk = Blueprint(
 )
 
 @cache.memoize(6000000)
-def _get_mesh(filter_non_empty, start, n, search):
+def _get_mesh(filter_non_empty, start, n, search, langfilter, ptsynfilter):
     aggmatch = {}
     
     if filter_non_empty:
         aggmatch.update({"wikilangs.langs": {"$ne": None}})
     
     if search is not None and len(search) > 0:
-        search_re = re.compile(h.prepare_user_input_search_regex(search), re.IGNORECASE)
+        prepared_search = h.prepare_user_input_search_regex(search)
+        print(prepared_search)
+        search_re = re.compile(prepared_search, re.IGNORECASE)
+        print(search_re)
         aggmatch.update({
             "$or": [
                 {"langs": {"$elemMatch": {"pt": {'$regex': search_re}}}},
                 {'_id': {"$regex": search_re}}
             ]
         })
+    
+    if langfilter is not None:
+        if langfilter == "no-english":
+            aggmatch.update({
+                    "wikilangs.lang_match": {"$ne": "en"}
+            })
+        else:
+            aggmatch.update({
+                    "wikilangs.lang_match": langfilter
+            })
 
+    if ptsynfilter is not None:
+        aggmatch.update({
+            "wikilangs.origin": ptsynfilter.lower()
+        })
+
+    print(aggmatch)
     n_documents = db.db.mesh_view.count_documents(aggmatch)
     
     agg = [
@@ -105,14 +124,23 @@ def _get_mesh(filter_non_empty, start, n, search):
 @flsk.route("/api/mesh", methods=["GET"])
 def get_mesh():
     args = dict(
-        filter_non_empty = request.args.get('filterOnlyNonEmpty', "false") == "true",
-        start = int(request.args.get('from', 0)),
-        n = int(request.args.get('limit', 10)),
-        search = request.args.get('search', ""),
+        filter_non_empty=request.args.get('filterOnlyNonEmpty', "false") == "true",
+        start=int(request.args.get('from', 0)),
+        n=int(request.args.get('limit', 10)),
+        search=request.args.get('search', ""),
+        langfilter=request.args.get('langMatchSearch'),
+        ptsynfilter=request.args.get('ptsynMatchSearch'),
     )
     print("**************************")
     pprint(args)
     return jsonify(_get_mesh(**args))
+
+    
+@cache.cached(6000000)
+@flsk.route("/api/languages", methods=["GET"])
+def get_languages():
+    return jsonify(list(db.db.wikimesh.find({}, {'_id': 0, 'lang_match': 1}).distinct("lang_match")))
+
 
 @cache.memoize(6000000)
 @flsk.route('/api/mesh-stats')
