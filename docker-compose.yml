@@ -12,8 +12,6 @@ services:
       - "./mongo/dumps:/dumps"
       - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - "./mongo/.dbshell:/home/mongodb/.dbshell"
-    ports:
-      - "${MONHO_PORT:-27017}:27017"
   redis:
     image: redis:latest
     networks:
