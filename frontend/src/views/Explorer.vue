@@ -229,7 +229,7 @@ export default class Explorer extends Vue {
     });
   }
   mounted() {
-    this.search = this.$route.query.search || "";
+    this.search = (this.$route.query.search as string) || "";
     this.fetchData();
   }
 }
