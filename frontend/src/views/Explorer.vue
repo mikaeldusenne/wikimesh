@@ -80,7 +80,7 @@
             </div>
             <hr key="Z" v-if="showAdvancedSearch"/>
             <div key="E" v-if="showAdvancedSearch"
-                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Filtrer les match par PT / SYN">
+                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Limiter la isualisation des liens à certaines langues">
               <label for="langview" class="col-sm-3 col-form-label">Voir&nbsp;seulement&nbsp;:</label>
               <div class="col-sm-9">
                 <b-form-select
