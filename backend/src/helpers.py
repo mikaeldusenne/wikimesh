@@ -141,7 +141,7 @@ def prepare_user_input_search_regex(s):
     return ".*" + ".*".join([
         e for e in
         "".join(replace_all(
-            re.escape(s), ' ', lambda ee: not (ee.isalnum() or ee in "\\-_()")
+            s, ' ', lambda ee: not (ee.isalnum() or ee in " \\-_()")
         )).strip()[:75].split(' ')
         if len(e)
     ]) + ".*"
