@@ -375,24 +375,35 @@ export default class Explorer extends Vue {
   }
 
   fetchLanguages(){
-    axios.get('api/languages').then(e => {this.languages = e.data;}).catch(console.log)
+    axios.get('api/languages').then(e => {
+      this.languages = e.data;
+      console.log(this.languages)
+    }).catch(console.log)
   }
-
+  
+  tryParseLocalStorage(name){
+    const localval = localStorage.getItem(name);
+    if(localval){
+      try {
+        const ans = JSON.parse(localval)
+        console.log('LOCALSTORAGE SEARCHED ' + name)
+        console.log(ans)
+        return ans
+      } catch (error) {
+        console.error(error);
+        console.log('error localstorage decode '+name+' :')
+        console.log(localval)
+      }
+    }
+  }
+  
+  
   mounted() {
     this.search = (this.$route.query.search as string) || "";
-    const localadvance = localStorage.getItem('showAdvancedSearch');
-    if(localadvance){
-      this.showAdvancedSearch = JSON.parse(localadvance) || this.showAdvancedSearch
-    }
 
-    const localptsyn = localStorage.getItem('ptsynMatchSearch');
-    if(localptsyn){
-      this.ptsynMatchSearch = JSON.parse(localptsyn) || this.ptsynMatchSearch
-    }
-    const locallang = localStorage.getItem('langMatchSearch');
-    if(locallang){
-      this.langMatchSearch = JSON.parse(locallang) || this.langMatchSearch
-    }
+    this.showAdvancedSearch = this.tryParseLocalStorage("showAdvancedSearch") || this.showAdvancedSearch
+    this.ptsynMatchSearch = this.tryParseLocalStorage("ptsynMatchSearch") || this.ptsynMatchSearch
+    this.langMatchSearch = this.tryParseLocalStorage("langMatchSearch") || this.langMatchSearch
     
     console.log(this.$route)
     this.fetchData();

@@ -139,7 +139,7 @@ def get_mesh():
 @cache.cached(6000000)
 @flsk.route("/api/languages", methods=["GET"])
 def get_languages():
-    return jsonify(list(db.db.wikimesh.find({}, {'_id': 0, 'lang_match': 1}).distinct("lang_match")))
+    return jsonify([e for e in list(db.db.wikimesh.find({}, {'_id': 0, 'lang_match': 1}).distinct("lang_match"))if e is not None])
 
 
 @cache.memoize(6000000)
