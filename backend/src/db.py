@@ -44,13 +44,30 @@ def bulk_insert(col, l):
 
 
 def create_indexes():
+    # db.mesh.create_index(
+    #     [
+    #         ("_id", 1),
+    #         ("lang", 1),
+    #     ],
+    #     unique=True
+    # )
     db.mesh.create_index(
         [
-            ("_id", 1),
-            ("lang", 1),
+            ("langs.pt", 1),
         ],
-        unique=True
     )
+    db.wikimesh.create_index(
+        [
+            ("lang_match", 1),
+        ],
+    )
+    db.wikimesh.create_index(
+        [
+            ("origin", 1),
+        ],
+    )
+    
+    
 
 
 def create_views():
@@ -74,3 +91,8 @@ def create_views():
     # db.db.mesh_view.find_one()
 
 connect()
+
+if __name__ == "__main__":
+    from sys import argv
+    if argv[1] == "index":
+        create_indexes()
