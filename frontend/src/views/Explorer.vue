@@ -34,7 +34,7 @@
                 <input
                   id="searchform"
                   type="text"
-                  maxlength="30"
+                  maxlength="75"
                   class="form-control"
                   placeholder="recherche en anglais / ID MeSH"
                   v-model="search"
