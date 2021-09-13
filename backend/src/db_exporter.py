@@ -83,14 +83,11 @@ def keys_if_not_None(e):
     else:
         return []
 
-@cache
-def mesh_stats():
-    all_links = [keys_if_not_None(e["langs"]) for e in db.db.wikimesh.find({}, {"_id": 0, "langs": 1})]
-    len([e for e in all_links if len(e) > 0])
-    
+
+def gen_report(filtr={}):
+    all_links = [keys_if_not_None(e["langs"]) for e in db.db.wikimesh.find(filtr, {"_id": 0, "langs": 1})]
     lens = list(map(len, all_links))
     return {
-        # "all_links": [list(e.keys()) for e in all_links],
         "n_trads": sorted(
             [e for e in Counter([e for e in lens if e>0]).items()],
             key=lambda e: e[0],
@@ -103,6 +100,35 @@ def mesh_stats():
         ),
         "overall": describe(lens),
     }
+
+
+@cache
+def mesh_stats():
+    all_links = gen_report()
+    def prepare_contingency(e):
+        e["lang_match"] = "en" if e["lang_match"] == "en" else "not_en"
+        return e
+    
+    l = [prepare_contingency(e) for e in db.db.wikimesh.find({'langs': {"$ne": None}}, {"_id": 0, "origin": 1, "lang_match": 1})]
+    ka = "origin"
+    kb = "lang_match"
+    
+    return {
+        **all_links,
+        **dict(
+            not_en = gen_report({"lang_match": {"$ne": "en"}, "langs": {"$ne": None}}),
+            en = gen_report({"lang_match": "en"}),
+            pt = gen_report({"origin": "pt"}),
+            syn = gen_report({"origin": "syn"}),
+        ),
+        "contingency": [
+            [[kae, kbe], len([e for e in l if e[ka]==kae and e[kb]==kbe])]
+            for kae in set([e[ka] for e in l])
+            for kbe in set([e[kb] for e in l])
+        ]
+    }
+    
+    
 
 
 if __name__ == "__main__":

@@ -280,7 +280,6 @@ export default class Explorer extends Vue {
   search = "";
   
   toggleAdvancedSearch(){
-    
     this.showAdvancedSearch = !this.showAdvancedSearch;
     localStorage.setItem("showAdvancedSearch", this.showAdvancedSearch)
     if(!this.showAdvancedSearch){
@@ -295,7 +294,17 @@ export default class Explorer extends Vue {
     // console.log(m.showDetails)
   }
   
+  @Watch('ptsynMatchSearch')
+  ptsynchgd(v){
+    localStorage.setItem('ptsynMatchSearch', this.ptsynMatchSearch)
+  }
   
+  @Watch('langMatchSearch')
+  ptsynchgd(v){
+    localStorage.setItem('langMatchSearch', this.langMatchSearch)
+  }
+  
+
   @Watch('currentPage')
   cpchgd(v, oldv){
     console.log(`current page changed ${oldv} -> ${v}`)
@@ -319,7 +328,7 @@ export default class Explorer extends Vue {
     // console.log("LANGCODES")
     // console.log(langCodes)
     let lang = langCodes.find(e => e.code == c);
-    return lang?lang.name:c;
+    return (lang&&lang.name)?lang.name:c;
   }
 
   searchData(){
@@ -371,7 +380,11 @@ export default class Explorer extends Vue {
 
   mounted() {
     this.search = (this.$route.query.search as string) || "";
+    
     this.showAdvancedSearch = JSON.parse(localStorage.getItem('showAdvancedSearch')) || this.showAdvancedSearch
+    this.ptsynMatchSearch = localStorage.getItem('ptsynMatchSearch') || this.ptsynMatchSearch
+    this.langMatchSearch = localStorage.getItem('langMatchSearch') || this.langMatchSearch
+    
     console.log(this.$route)
     this.fetchData();
     this.fetchLanguages();

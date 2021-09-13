@@ -58,9 +58,9 @@ export default class Barplot extends Vue {
     },
     title: {
       text: this.title,
-      font: this.font,
+      font: {...this.font, ...{size: 12}},
       xref: 'paper',
-      x: 0.05,
+      x: 100,
     },
     xaxis: {
       tickfont: this.font,
