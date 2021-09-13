@@ -44,7 +44,7 @@ export let langCodes = [
     { "code": "es", "name": "Spanish" },
     { "code": "et", "name": "Estonian" },
     { "code": "eu", "name": "Basque" },
-    { "code": "fa", "name": "Persian" },
+    { "code": "fa", "name": "Farsi" },
     { "code": "ff", "name": "Fulah" },
     { "code": "fi", "name": "Finnish" },
     { "code": "fj", "name": "Fijian" },
