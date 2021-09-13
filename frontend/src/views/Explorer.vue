@@ -218,8 +218,8 @@ export default class Explorer extends Vue {
   error = null;
   fetching = false;
   showAdvancedSearch = false;
-  langMatchSearch = null;
-  ptsynMatchSearch = null;
+  langMatchSearch: string | null = null;
+  ptsynMatchSearch: string | null = null;
   langView = null;
   
   languages: any[] = [];
@@ -281,7 +281,7 @@ export default class Explorer extends Vue {
   
   toggleAdvancedSearch(){
     this.showAdvancedSearch = !this.showAdvancedSearch;
-    localStorage.setItem("showAdvancedSearch", this.showAdvancedSearch)
+    localStorage.setItem("showAdvancedSearch",JSON.stringify(this.showAdvancedSearch))
     if(!this.showAdvancedSearch){
       this.ptsynMatchSearch = null;
       this.langMatchSearch = null;
@@ -296,12 +296,12 @@ export default class Explorer extends Vue {
   
   @Watch('ptsynMatchSearch')
   ptsynchgd(v){
-    localStorage.setItem('ptsynMatchSearch', this.ptsynMatchSearch)
+    localStorage.setItem('ptsynMatchSearch', JSON.stringify(this.ptsynMatchSearch))
   }
   
   @Watch('langMatchSearch')
-  ptsynchgd(v){
-    localStorage.setItem('langMatchSearch', this.langMatchSearch)
+  langchgd(v){
+    localStorage.setItem('langMatchSearch', JSON.stringify(this.langMatchSearch))
   }
   
 
@@ -380,10 +380,19 @@ export default class Explorer extends Vue {
 
   mounted() {
     this.search = (this.$route.query.search as string) || "";
-    
-    this.showAdvancedSearch = JSON.parse(localStorage.getItem('showAdvancedSearch')) || this.showAdvancedSearch
-    this.ptsynMatchSearch = localStorage.getItem('ptsynMatchSearch') || this.ptsynMatchSearch
-    this.langMatchSearch = localStorage.getItem('langMatchSearch') || this.langMatchSearch
+    const localadvance = localStorage.getItem('showAdvancedSearch');
+    if(localadvance){
+      this.showAdvancedSearch = JSON.parse(localadvance) || this.showAdvancedSearch
+    }
+
+    const localptsyn = localStorage.getItem('ptsynMatchSearch');
+    if(localptsyn){
+      this.ptsynMatchSearch = JSON.parse(localptsyn) || this.ptsynMatchSearch
+    }
+    const locallang = localStorage.getItem('langMatchSearch');
+    if(locallang){
+      this.langMatchSearch = JSON.parse(locallang) || this.langMatchSearch
+    }
     
     console.log(this.$route)
     this.fetchData();
