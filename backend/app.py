@@ -68,7 +68,7 @@ flsk = Blueprint(
 )
 
 @cache.memoize(6000000)
-def _get_mesh(filter_non_empty, start, n, search, langfilter, ptsynfilter):
+def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, langFilter, langMesh, langMeshType, langWiki):
     aggmatch = {}
     
     if filter_non_empty:
@@ -86,20 +86,34 @@ def _get_mesh(filter_non_empty, start, n, search, langfilter, ptsynfilter):
             ]
         })
     
-    if langfilter is not None:
-        if langfilter == "no-english":
+    if langMatchFilter is not None:
+        if langMatchFilter == "no-english":
             aggmatch.update({
                     "wikilangs.lang_match": {"$ne": "en"}
             })
         else:
             aggmatch.update({
-                    "wikilangs.lang_match": langfilter
+                    "wikilangs.lang_match": langMatchFilter
             })
 
     if ptsynfilter is not None:
         aggmatch.update({
             "wikilangs.origin": ptsynfilter.lower()
         })
+
+    if langFilter is not None:
+        if langMesh != "all":
+            d = {'$elemMatch': {'_id': langFilter}}
+            if langMesh == "no":
+                d = {'$not': d}
+            aggmatch.update({
+                "langs": d
+            })
+        if langWiki != "all":
+            aggmatch.update({
+                f"wikilangs.langs.{langFilter}": {'$exists': langWiki=="yes"}
+            })
+            
 
     print(aggmatch)
     n_documents = db.db.mesh_view.count_documents(aggmatch)
@@ -127,9 +141,15 @@ def get_mesh():
         filter_non_empty=request.args.get('filterOnlyNonEmpty', "false") == "true",
         start=int(request.args.get('from', 0)),
         n=int(request.args.get('limit', 10)),
+        
         search=request.args.get('search', ""),
-        langfilter=request.args.get('langMatchSearch'),
+        langMatchFilter=request.args.get('langMatchSearch'),
         ptsynfilter=request.args.get('ptsynMatchSearch'),
+        
+        langFilter=request.args.get('langSearch'),
+        langMesh=request.args.get('langMesh'),
+        langMeshType=request.args.get('langMeshType'),
+        langWiki=request.args.get('langWiki'),
     )
     print("**************************")
     pprint(args)

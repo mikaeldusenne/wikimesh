@@ -1,7 +1,8 @@
 from pprint import pprint
 from matplotlib import pyplot as plt
 from collections import Counter
-from functools import cache
+from functools import cache, reduce
+from os.path import join
 
 from backend.src import db
 from statistics import mean, stdev
@@ -101,6 +102,90 @@ def gen_report(filtr={}):
         "overall": describe(lens),
     }
 
+def normalize(s):
+    return (s or "").lower().strip()
+
+def find(l, predicate, extract=lambda e: e):
+    for e in l:
+        if predicate(e):
+            return extract(e)
+
+def list_match_mesh_wiki():
+    def get_wikilangs(m):
+        return m['wikilangs'].get("langs", {}) or {}
+    
+    def f(m):
+        def find_lang_match(lang):
+            wikilang = normalize(get_wikilangs(m).get(lang))
+            meshlang = find(m['langs'], lambda e: e['_id']==lang)
+            if meshlang is None:
+                return "not_in_mesh"
+            elif wikilang is None or not len(wikilang):
+                # raise Exception(f"not in wiki: [{lang}] -->\n{m}")
+                return "not_in_wiki"
+            else:
+                if normalize(meshlang['pt']) == wikilang:
+                    return "pt"
+                else:
+                    if any([normalize(e) == wikilang for e in meshlang.get('syns', [])]):
+                        return "syn"
+                    else:
+                        return "no_match"
+                
+        alllangs = list(set([ee for e in [
+            list(get_wikilangs(m).keys()), [e['_id'] for e in m['langs']]
+        ] for ee in e]))
+        
+        return {lang: find_lang_match(lang) for lang in alllangs}
+        
+    for m in db.db.mesh_view.find():
+            yield f(m)
+
+# def test():
+#     for e in db.db.mesh_view.find():
+#         try:
+#             len(e['wikilangs']['langs'])
+#         except:
+#             print(e)
+#             return
+# test()
+# m = db.db.mesh_view.find_one({"_id": "000008"})
+
+# l = [len(e['wikilangs']['langs']) for e in db.db.mesh_view.find()]
+
+def setPath(d, path, f):
+    # print(d, path)
+    if type(path) == str:
+        path=path.split('/')
+    [p, *ps] = path
+    if len(ps) == 0:
+        d[p] = f(d.get(p))
+    else:
+        if p not in d:
+            d[p] = {}
+        setPath(d[p], ps, f)
+    return d
+
+def sumdicts(da, db):
+    d = {}
+    for k in set(list(da.keys()) + list(db.keys())):
+        d[k] = da.get(k, 0) + db.get(k, 0)
+    return d
+
+def report_match_mesh_wiki():
+    # pprint(db.db.mesh_view.find_one())
+    l = list(list_match_mesh_wiki())
+    # pprint(l[:5])
+    # pprint(next(l))
+    def combine(acc, e):
+        for lang, match in e.items():
+            setPath(acc, join(lang, match), lambda ee: (ee or 0)+1)
+        return acc
+    
+    summary = reduce(combine, l, {})
+    summary['overall'] = reduce(sumdicts, summary.values())
+    # summary['overall']
+    return summary
 
 @cache
 def mesh_stats():
@@ -125,7 +210,8 @@ def mesh_stats():
             [[kae, kbe], len([e for e in l if e[ka]==kae and e[kb]==kbe])]
             for kae in set([e[ka] for e in l])
             for kbe in set([e[kb] for e in l])
-        ]
+        ],
+        'match_report': report_match_mesh_wiki(),
     }
     
     

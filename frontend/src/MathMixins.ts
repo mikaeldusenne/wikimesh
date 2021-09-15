@@ -1,7 +1,9 @@
 import { Component, Vue } from "vue-property-decorator";
+import { langCodes } from "@/langCodes.js";
+// import _ from "lodash";
 
 @Component
-export default class MathMixin extends Vue {
+export default class MathMixins extends Vue {
   prettyN(n) {
     return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
@@ -36,4 +38,8 @@ export default class MathMixin extends Vue {
       : k.toFixed(Math.max(0, -Math.floor(Math.log10(k)) + (n - 1)));
   }
 
+  langFromCode(c){
+    let lang = langCodes.find(e => e.code == c);
+    return (lang&&lang.name)?lang.name:c;
+  }
 }

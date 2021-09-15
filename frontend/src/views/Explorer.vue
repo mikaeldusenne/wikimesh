@@ -16,7 +16,7 @@
     </b-row>
     
     <div class="row justify-content-md-center" style="margin: 1rem;" @keyup.enter="searchData" v-on:submit.prevent>
-      <b-col sm="12" md="8" lg="6" xl="4" >
+      <b-col sm="12" md="8" lg="6" xl="6" >
         <div class="container-fluid form">
           <transition-group name="list-form" tag="form">
 
@@ -24,7 +24,7 @@
               <div class="input-group" style="padding: 0.5rem 0.375rem;">
                 <label>
                   <input type="checkbox" class="form-check-input"  v-model="filterOnlyNonEmpty" />
-                  Masquer les entrées vides
+                  Hide empty entries
                 </label>
               </div>
             </div>
@@ -36,7 +36,7 @@
                   type="text"
                   maxlength="75"
                   class="form-control"
-                  placeholder="recherche en anglais / ID MeSH"
+                  placeholder="search by term or MeSH ID"
                   v-model="search"
                 />
                 <div class="input-group-append">
@@ -52,8 +52,10 @@
             </div>
             
             <div key="C" v-if="showAdvancedSearch"
-                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Langue du concept ayant permis de trouver les articles">
-              <label for="lang-match-search" class="col-sm-2 col-form-label">Langue&nbsp;:</label>
+                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Language of the concept that allowed to find the Wikipedia entries">
+              <hr>
+              <div><strong>Match type:</strong></div>
+              <label for="lang-match-search" class="col-sm-2 col-form-label">Language&nbsp;:</label>
               <div class="col-sm-10">
                 <b-form-select
                   id="lang-match-search"
@@ -78,10 +80,62 @@
                 />
               </div>
             </div>
+            
+            
+            <div key="CA" v-if="showAdvancedSearch"
+                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="">
+              <hr>
+              <div>
+                <strong>Filter results:</strong>
+                <p><em>Filter the res</em></p>
+              </div>
+              <label for="lang-match-search" class="col-sm-4 col-form-label">Language:</label>
+              <div class="col-sm-8">
+                <b-form-select
+                  v-model="langSearch"
+                  :options="langMatchOptions"
+                  @change="searchData"
+                  class="form-control form-control"
+                />
+              </div>
+            </div>
+            <div key="CB" v-if="showAdvancedSearch" class="row mb-2 list-item-form">
+              <label for="lang-match-search" class="col-sm-4 col-form-label">MeSH:</label>
+              <div class="col-sm-8" style="display: inline-grid; grid-template-columns: 33% 33% 33%">
+                <div class="form-check" style="display: inline;" v-for="yna in ['yes', 'no', 'all']">
+                  <input class="form-check-input" @change="searchData"
+                         :id="'langmesh-'+yna" type="radio" name="langMesh" :value="yna" v-model="langMesh">
+                  <label class="form-check-label" :for="'langmesh-'+yna" >{{yna}}</label>
+                </div>
+              </div>
+            </div>
+            <div key="CD" v-if="showAdvancedSearch" class="row mb-2 list-item-form">
+              <label for="lang-match-search" class="col-sm-4 col-form-label">Wikipedia:</label>
+              <div class="col-sm-8" style="display: inline-grid; grid-template-columns: 33% 33% 33%">
+                <div class="form-check form-check-inline" v-for="yna in ['yes', 'no', 'all']">
+                  <input class="form-check-input" @change="searchData"
+                         :id="'langwiki-'+yna" type="radio" name="langWiki" :value="yna" v-model="langWiki">
+                  <label class="form-check-label" :for="'langwiki-'+yna" >{{yna}}</label>
+                </div>
+              </div>
+            </div>
+            <!-- <div key="CC" v-if="showAdvancedSearch && langMesh!='no' && langWiki!='no'" class="row mb-2 list-item-form">
+                 <label for="lang-match-search" class="col-sm-4 col-form-label">MeSH/Wiki match:</label>
+                 <div class="col-sm-8" style="display: inline-grid; grid-template-columns: 25% 25% 25% 25%">
+                 <div class="form-check form-check-inline" v-for="yna in ['pt', 'syn', 'none', 'all']">
+                 <input class="form-check-input" @change="searchData"
+                 :id="'langmeshtype-'+yna" type="radio"
+                 name="langMeshType" :value="yna" v-model="langMeshType">
+                 <label class="form-check-label" :for="'langmeshtype-'+yna" >{{yna}}</label>
+                 </div>
+                 </div>
+                 </div> -->
+            
+              
             <hr key="Z" v-if="showAdvancedSearch"/>
             <div key="E" v-if="showAdvancedSearch"
                  class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Limiter la isualisation des liens à certaines langues">
-              <label for="langview" class="col-sm-3 col-form-label">Voir&nbsp;seulement&nbsp;:</label>
+              <label for="langview" class="col-sm-3 col-form-label">View&nbsp;only&nbsp;:</label>
               <div class="col-sm-9">
                 <b-form-select
                   id="langview"
@@ -98,7 +152,7 @@
               <div style="float: right;">
                 <em style="color: #555; text-decoration: underline; cursor: pointer;"
                     @click="toggleAdvancedSearch">
-                  {{showAdvancedSearch?"recherche simplifiée":"recherche avancée"}}
+                  {{showAdvancedSearch?"normal search":"advanced search"}}
                 </em>
               </div>
             </div>
@@ -121,9 +175,9 @@
             </div>
             <div class="meshterm" data-toggle="tooltip" data-placement="top" :title="matchInfo(m)">
               {{m.langs[0].pt}}
-              <span><em style="font-size:0.9rem; color: #ddd;">{{m.wikilangs.langs.length}}&nbsp;langues.</em></span>
+              <span><em style="font-size:0.9rem; color: #ddd;">{{m.wikilangs.langs.length}}&nbsp;languages.</em></span>
             </div>
-            <span class="show-details" @click="toggleDetails(m)" style="position: absolute; right: 1rem;" data-toggle="tooltip" data-placement="top" :title="(m.showDetails?'masquer':'afficher') + ' les détails du concept MeSH'"><font-awesome-icon :icon="m.showDetails?'eye-slash':'eye'" /></span>
+            <span class="show-details" @click="toggleDetails(m)" style="position: absolute; right: 1rem;" data-toggle="tooltip" data-placement="top" :title="(m.showDetails?'hide':'show') + ' MeSH concept details'"><font-awesome-icon :icon="m.showDetails?'eye-slash':'eye'" /></span>
           </b-card-title>
           
           <b-card-body class="item-card-body">
@@ -133,7 +187,7 @@
               <transition-group name="list" tag="div" class="row row-item">
                 
                 <b-col key="colMesh" class="conceptdetails list-item" lg="6" v-if="m.showDetails" style="margin-bottom: 1rem; max-height: 15rem; height: 15rem; overflow: auto;">
-                    <p style="margin-bottom: 0.5rem;"><strong style="width: 100%;">Détails du concept:</strong></p>
+                    <p style="margin-bottom: 0.5rem;"><strong style="width: 100%;">Concept details:</strong></p>
                     <p><strong>id:&nbsp;</strong>{{m._id}}</p>
                     <div v-for="e in m.langs" :key="e._id">
                       <hr style="margin: 0.25rem;" />
@@ -223,11 +277,16 @@ export default class Explorer extends Vue {
   langView = null;
   
   languages: any[] = [];
-
+  
+  langSearch = null
+  langMesh = "all"
+  langMeshType = "all"
+  langWiki = "all"
+  
   get langMatchOptions(){
     return [
-      {text: "toutes les langues", value: null},
-      {text: "tout sauf l'anglais", value: "no-english"},
+      {text: "all languages", value: null},
+      {text: "all except english", value: "no-english"},
     ].concat(_.sortBy(
       this.languages.map(e => {
         return {
@@ -242,8 +301,8 @@ export default class Explorer extends Vue {
   
   get langViewOptions(){
     return [
-      {text: "toutes les langues", value: null},
-      {text: "tout sauf l'anglais", value: "no-english"},
+      {text: "all languages", value: null},
+      {text: "all languages except english", value: "no-english"},
     ].concat(_.sortBy(
       this.languages.map(e => {
         return {
@@ -353,6 +412,10 @@ export default class Explorer extends Vue {
       langMatchSearch: this.langMatchSearch,
       ptsynMatchSearch: this.ptsynMatchSearch,
       filterOnlyNonEmpty: this.filterOnlyNonEmpty,
+      langSearch: this.langSearch,
+      langMesh: this.langMesh,
+      langMeshType: this.langMeshType,
+      langWiki: this.langWiki,
     }})
     .then(ans => {
       console.log('MESH fetched')
