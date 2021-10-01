@@ -300,7 +300,8 @@ export default class Explorer extends Vue {
   identifiers: string[] = [];
   
   get identifierOptions(){
-    return [{text: "everything", value: null}].concat(this.identifiers.map(e => {
+    const everything: any[] = [{text: "everything", value: null}];
+    return everything.concat(this.identifiers.map(e => {
       return {
         text: e,
         value: e
