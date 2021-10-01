@@ -3,3 +3,5 @@ frontend/.npm
 **/.mypy_cache
 mongo/volume
 
+mongo/dumps
+backend/data
