@@ -84,24 +84,6 @@ def keys_if_not_None(e):
     else:
         return []
 
-
-def gen_report(filtr={}):
-    all_links = [keys_if_not_None(e["langs"]) for e in db.db.wikimesh.find(filtr, {"_id": 0, "langs": 1})]
-    lens = list(map(len, all_links))
-    return {
-        "n_trads": sorted(
-            [e for e in Counter([e for e in lens if e>0]).items()],
-            key=lambda e: e[0],
-            reverse=False
-        ),
-        "langs": sorted(
-            [e for e in Counter([ee for e in all_links for ee in e]).items()],
-            key=lambda e: e[1],
-            reverse=True
-        ),
-        "overall": describe(lens),
-    }
-
 def normalize(s):
     return (s or "").lower().strip()
 
@@ -110,7 +92,27 @@ def find(l, predicate, extract=lambda e: e):
         if predicate(e):
             return extract(e)
 
-def list_match_mesh_wiki():
+def setPath(d, path, f):
+    # print(d, path)
+    if type(path) == str:
+        path=path.split('/')
+    [p, *ps] = path
+    if len(ps) == 0:
+        d[p] = f(d.get(p))
+    else:
+        if p not in d:
+            d[p] = {}
+        setPath(d[p], ps, f)
+    return d
+
+def sumdicts(da, db):
+    d = {}
+    for k in set(list(da.keys()) + list(db.keys())):
+        d[k] = da.get(k, 0) + db.get(k, 0)
+    return d
+
+
+def list_match_mesh_wiki(identifier):
     def get_wikilangs(m):
         return m['wikilangs'].get("langs", {}) or {}
     
@@ -138,43 +140,31 @@ def list_match_mesh_wiki():
         
         return {lang: find_lang_match(lang) for lang in alllangs}
         
-    for m in db.db.mesh_view.find():
+    for m in db.db.mesh_view.find({"identifier": identifier}):
             yield f(m)
 
-# def test():
-#     for e in db.db.mesh_view.find():
-#         try:
-#             len(e['wikilangs']['langs'])
-#         except:
-#             print(e)
-#             return
-# test()
-# m = db.db.mesh_view.find_one({"_id": "000008"})
 
-# l = [len(e['wikilangs']['langs']) for e in db.db.mesh_view.find()]
+def gen_report(filtr={}):
+    all_links = [keys_if_not_None(e["langs"]) for e in db.db.wikimesh.find(filtr, {"_id": 0, "langs": 1})]
+    lens = list(map(len, all_links))
+    return {
+        "n_trads": sorted(
+            [e for e in Counter([e for e in lens if e>0]).items()],
+            key=lambda e: e[0],
+            reverse=False
+        ),
+        "langs": sorted(
+            [e for e in Counter([ee for e in all_links for ee in e]).items()],
+            key=lambda e: e[1],
+            reverse=True
+        ),
+        "overall": describe(lens),
+    }
 
-def setPath(d, path, f):
-    # print(d, path)
-    if type(path) == str:
-        path=path.split('/')
-    [p, *ps] = path
-    if len(ps) == 0:
-        d[p] = f(d.get(p))
-    else:
-        if p not in d:
-            d[p] = {}
-        setPath(d[p], ps, f)
-    return d
 
-def sumdicts(da, db):
-    d = {}
-    for k in set(list(da.keys()) + list(db.keys())):
-        d[k] = da.get(k, 0) + db.get(k, 0)
-    return d
-
-def report_match_mesh_wiki():
+def report_match_mesh_wiki(identifier):
     # pprint(db.db.mesh_view.find_one())
-    l = list(list_match_mesh_wiki())
+    l = list(list_match_mesh_wiki(identifier))
     # pprint(l[:5])
     # pprint(next(l))
     def combine(acc, e):
@@ -189,31 +179,35 @@ def report_match_mesh_wiki():
 
 @cache
 def mesh_stats():
-    all_links = gen_report()
-    def prepare_contingency(e):
-        e["lang_match"] = "en" if e["lang_match"] == "en" else "not_en"
-        return e
-    
-    l = [prepare_contingency(e) for e in db.db.wikimesh.find({'langs': {"$ne": None}}, {"_id": 0, "origin": 1, "lang_match": 1})]
-    ka = "origin"
-    kb = "lang_match"
-    
+    def run_identifier(identifier):
+        all_links = gen_report({"identifier": identifier})
+        def prepare_contingency(e):
+            e["lang_match"] = "en" if e["lang_match"] == "en" else "not_en"
+            return e
+
+        l = [prepare_contingency(e) for e in db.db.wikimesh.find({"identifier": identifier,'langs': {"$ne": None}}, {"_id": 0, "origin": 1, "lang_match": 1})]
+        ka = "origin"
+        kb = "lang_match"
+
+        return {
+            **all_links,
+            **dict(
+                not_en = gen_report({"identifier": identifier, "lang_match": {"$ne": "en"}, "langs": {"$ne": None}}),
+                en =     gen_report({"identifier": identifier, "lang_match": "en"}),
+                pt =     gen_report({"identifier": identifier, "origin": "pt"}),
+                syn =    gen_report({"identifier": identifier, "origin": "syn"}),
+            ),
+            "contingency": [
+                [[kae, kbe], len([e for e in l if e[ka]==kae and e[kb]==kbe])]
+                for kae in set([e[ka] for e in l])
+                for kbe in set([e[kb] for e in l])
+            ],
+            'match_report': report_match_mesh_wiki(identifier),
+        }
     return {
-        **all_links,
-        **dict(
-            not_en = gen_report({"lang_match": {"$ne": "en"}, "langs": {"$ne": None}}),
-            en = gen_report({"lang_match": "en"}),
-            pt = gen_report({"origin": "pt"}),
-            syn = gen_report({"origin": "syn"}),
-        ),
-        "contingency": [
-            [[kae, kbe], len([e for e in l if e[ka]==kae and e[kb]==kbe])]
-            for kae in set([e[ka] for e in l])
-            for kbe in set([e[kb] for e in l])
-        ],
-        'match_report': report_match_mesh_wiki(),
+        id: run_identifier(id)
+        for id in db.db.mesh.distinct("identifier")
     }
-    
     
 
 

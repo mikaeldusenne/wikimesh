@@ -51,6 +51,19 @@
               </div>
             </div>
             
+            <div key="CAA"
+                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Language of the concept that allowed to find the Wikipedia entries">
+              <label for="lang-match-search" class="col-sm-2 col-form-label">Identifier&nbsp;:</label>
+              <div class="col-sm-10">
+                <b-form-select
+                  v-model="identifier"
+                  :options="identifierOptions"
+                  @change="searchData"
+                  class="form-control form-control"
+                />
+              </div>
+            </div>
+            
             <div key="C" v-if="showAdvancedSearch"
                  class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Language of the concept that allowed to find the Wikipedia entries">
               <hr>
@@ -282,6 +295,18 @@ export default class Explorer extends Vue {
   langMesh = "all"
   langMeshType = "all"
   langWiki = "all"
+
+  identifier: null | string = null;
+  identifiers: string[] = [];
+  
+  get identifierOptions(){
+    return [{text: "everything", value: null}].concat(this.identifiers.map(e => {
+      return {
+        text: e,
+        value: e
+      }
+    }))
+  }
   
   get langMatchOptions(){
     return [
@@ -416,6 +441,7 @@ export default class Explorer extends Vue {
       langMesh: this.langMesh,
       langMeshType: this.langMeshType,
       langWiki: this.langWiki,
+      identifier: this.identifier,
     }})
     .then(ans => {
       console.log('MESH fetched')
@@ -441,6 +467,13 @@ export default class Explorer extends Vue {
     axios.get('api/languages').then(e => {
       this.languages = e.data;
       console.log(this.languages)
+    }).catch(console.log)
+  }
+  
+  fetchIdentifiers(){
+    axios.get('api/identifiers').then(e => {
+      this.identifiers = e.data;
+      console.log(this.identifiers)
     }).catch(console.log)
   }
   
@@ -471,6 +504,7 @@ export default class Explorer extends Vue {
     console.log(this.$route)
     this.fetchData();
     this.fetchLanguages();
+    this.fetchIdentifiers();
   }
 
 }

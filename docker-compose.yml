@@ -24,6 +24,14 @@ services:
       - wikimesh_network
     build:
       context: "./backend"
+    # environment:
+    #   - MONGO_PORT
+    #   - MONGO_HOST
+    #   - MONGO_INITDB_DATABASE
+    #   - MONGO_INITDB_ROOT_USERNAME
+    #   - MONGO_INITDB_ROOT_PASSWORD
+    #   - MONGO_INITDB_USER_USERNAME
+    #   - MONGO_INITDB_USER_PASSWORD
     env_file:
       - ./mongo/.env
       - ./backend/.env

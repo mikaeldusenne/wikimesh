@@ -6,6 +6,20 @@
         <p>
           Statistiques descriptives des entrées wikipédia trouvées. 
         </p>
+        <div class="container-fluid form">
+          <form>
+            <div class="row mb-2 list-item-form">
+              <label for="selecttdata" class="col-sm-2 col-form-label">Identifier&nbsp;:</label>
+              <div class="col-sm-10">
+                <b-form-select
+                  v-model="identifier"
+                  :options="identifierOptions"
+                  class="form-control form-control"
+                />
+              </div>
+            </div>
+          </form>
+        </div>
       </b-col>
     </b-row>
     <div>
@@ -14,7 +28,7 @@
         <b-col sm="12" md="8" lg="6" xl="6" >
           <div class="card">
             <div class="card-header">
-              <div style="margin-bottom: 1rem;"><strong>MeSH translations vs Wikipedia entries</strong></div>
+              <div style="margin-bottom: 1rem;"><strong>{{identifier}} translations vs Wikipedia entries</strong></div>
               <div class="container-fluid form">
                 <form>
                   <div class="row mb-2 list-item-form">
@@ -34,21 +48,21 @@
               <p>
                 
                 <div v-if="matchReportView != 'overall'">
-                  Among the MeSH terms in <span class="number">{{langFromCode(matchReportView)}}</span>,
+                  Among the {{identifier}} terms in <span class="number">{{langFromCode(matchReportView)}}</span>,
                 </div>
                 <div v-else>
-                  Among all languages of all MeSH terms,
+                  Among all languages of all {{identifier}} terms,
                 </div>
                 <br>
                 <span class="number" v-html="prettyN(stats.match_report[matchReportView].not_in_wiki || 0)" /> didn't have an associated wikipedia page, <br>
-                <span class="number" v-html="prettyN(stats.match_report[matchReportView].not_in_mesh || 0)" /> had a wikipedia page but no MeSH translation in this language,<br>
-                <span class="number" v-html="prettyN(stats.match_report[matchReportView].no_match || 0)" /> had entries both in the MeSH and in wikipedia, but nor the Preferred Term not the Synonyms corresponded to the wikipedia entry. <br>
+                <span class="number" v-html="prettyN(stats.match_report[matchReportView].not_in_mesh || 0)" /> had a wikipedia page but no {{identifier}} translation in this language,<br>
+                <span class="number" v-html="prettyN(stats.match_report[matchReportView].no_match || 0)" /> had entries both in the {{identifier}} and in wikipedia, but nor the Preferred Term not the Synonyms corresponded to the wikipedia entry. <br>
                 
                 
               </p>
               <p>
-                For <span class="number" v-html="prettyN(stats.match_report[matchReportView].pt || 0)" /> MeSH terms, the Preferred Term matched the wikipedia entry.<br>
-                For <span class="number" v-html="prettyN(stats.match_report[matchReportView].syn || 0)" /> MeSH terms, one of the synonyms matched the wikipedia entry.
+                For <span class="number" v-html="prettyN(stats.match_report[matchReportView].pt || 0)" /> {{identifier}} terms, the Preferred Term matched the wikipedia entry.<br>
+                For <span class="number" v-html="prettyN(stats.match_report[matchReportView].syn || 0)" /> {{identifier}} terms, one of the synonyms matched the wikipedia entry.
               </p>
               
             </div>
@@ -65,7 +79,7 @@
     <b-row class="justify-content-md-center">
       <b-col sm="12" md="10" lg="8" xl="6" v-if="stats">
         <p>
-        Among the searched MeSH terms, <span class="number" v-html="prettyN(stats.overall.zero)" /> / <span class="number" v-html="prettyN(stats.overall.n)" /> (<span class="number" v-html="prettyN((stats.overall.zero_frac*100).toFixed(2)) + '%'" />) did not have a corresponding entry on Wikipedia.
+          Among the searched {{identifier}} terms, <span class="number" v-html="prettyN(stats.overall.zero)" /> / <span class="number" v-html="prettyN(stats.overall.n)" /> (<span class="number" v-html="prettyN((stats.overall.zero_frac*100).toFixed(2)) + '%'" />) did not have a corresponding entry on Wikipedia.
         </p>
         <p>
         On average there existed <span class="number" v-html="prettyN(stats.overall.mean.toFixed(0))" /> (DS = <span class="number" v-html="prettyN(stats.overall.sd.toFixed(0))" />) translations per concept found.
@@ -75,9 +89,9 @@
         </p>
         <hr>
         <p>
-          <span class="number" v-html="prettyN(stats.en.overall.n)" /> Documents were found thanks to an english MeSH term (<span class="number" v-html="prettyN(stats.en.overall.mean.toFixed(0))" /> &#177; <span class="number" v-html="prettyN(stats.en.overall.sd.toFixed(0))" /> translation per MeSH term),<br>
+          <span class="number" v-html="prettyN(stats.en.overall.n)" /> Documents were found thanks to an english {{identifier}} term (<span class="number" v-html="prettyN(stats.en.overall.mean.toFixed(0))" /> &#177; <span class="number" v-html="prettyN(stats.en.overall.sd.toFixed(0))" /> translation per {{identifier}} term),<br>
         </p><p>
-          <span class="number" v-html="prettyN(stats.not_en.overall.n)" /> Documents were found thanks to a MeSH term in another language than english (in the event where the english term did not return any Wikipedia entry) (<span class="number" v-html="prettyN(stats.not_en.overall.mean.toFixed(0))" /> &#177; <span class="number" v-html="prettyN(stats.not_en.overall.sd.toFixed(0))" /> translation per MeSH term)<br>
+          <span class="number" v-html="prettyN(stats.not_en.overall.n)" /> Documents were found thanks to a {{identifier}} term in another language than english (in the event where the english term did not return any Wikipedia entry) (<span class="number" v-html="prettyN(stats.not_en.overall.mean.toFixed(0))" /> &#177; <span class="number" v-html="prettyN(stats.not_en.overall.sd.toFixed(0))" /> translation per {{identifier}} term)<br>
         </p>
           <div style="display: flex; justify-content: center;">
             
@@ -140,9 +154,9 @@
       <b-col sm="12" md="10" lg="8" xl="6" v-if="stats">
         <div class="plot">
           <Barplot
-            title="Repartition of the number of translations per MeSH term"
+            title="Repartition of the number of translations per term"
             xtitle="Number of translations"
-            ytitle="Number of MeSH terms"
+            ytitle="Number of terms"
             :xdata="statsplotdata.n_trads.map(e => e[0].toFixed(0))"
             :ydata="statsplotdata.n_trads.map(e => e[1])"
           />
@@ -183,7 +197,7 @@ import MathMixins from "@/MathMixins";
   mixins: [MathMixins]
 })
 export default class Stats extends Mixins(MathMixins) { 
-  stats: any = null;
+  allStats: any = null;
   plotData: string | null = null;
   
   plotDataOptions = [
@@ -219,6 +233,33 @@ export default class Stats extends Mixins(MathMixins) {
     }), [e => e.text.toLowerCase()]))
   }
 
+  identifier: null | string = null;
+  identifiers: string[] = [];
+  
+  get stats(){
+    if(this.allStats && this.identifier){
+      return this.allStats[this.identifier]
+    }else{
+      return null;
+    }
+  }
+  
+  get identifierOptions(){
+    return this.identifiers.map(e => {
+      return {
+        text: e,
+        value: e
+      }
+    })
+  }
+
+  fetchIdentifiers(){
+    axios.get('api/identifiers').then(e => {
+      this.identifiers = e.data;
+      console.log(this.identifiers)
+      this.identifier = this.identifiers[0];
+    }).catch(console.log)
+  }
   
 
   get statsplotdata(){
@@ -250,11 +291,12 @@ export default class Stats extends Mixins(MathMixins) {
     .then(ans => {
       console.log('stats');
       console.log(ans.data);
-      this.stats = ans.data
+      this.allStats = ans.data
     })
     .catch(console.log);
   }
   mounted() {
+    this.fetchIdentifiers();
     this.fetchData();
   }
 }

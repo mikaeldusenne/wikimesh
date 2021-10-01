@@ -8,25 +8,39 @@ from pprint import pprint
 import attr
 import cattr
 from itertools import groupby
+import argparse
 
-
+from backend.src.pytypes import conv, V, Row, Mesh, MeshLang
 from backend.src import db
 from backend.src import helpers as h
-from backend.src.pytypes import conv, V, Row, Mesh, MeshLang
-# db.db.mesh.drop()
-# maxn = 100
+
 
 if __name__ == "__main__":
-    db.client
-    filepath = "backend/data/mesh_descr_ml.csv"
-    with open(filepath, encoding="utf-8") as f:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--force', action='store_true', default=False)
+    parser.add_argument('-i', '--identifier')
+    parser.add_argument('path', help='path to file')
+    args = parser.parse_args()
+
+    print(args)
+    # db.client
+    # filepath = "backend/data/mesh_descr_ml.csv"
+    with open(args.path, encoding="utf-8") as f:
         csvreader = csv.reader(f, delimiter=',', quotechar='"')
         columns = [e.lower() for e in next(csvreader)]
-        for i, (id, _rows) in enumerate(groupby(map(lambda e: conv.structure(dict(zip(columns, e)), Row), csvreader), lambda e: e.idmesh)):
+        columns[0] = "id"
+        
+        def strct(e):
+            d = dict(zip(columns, e))
+            if args.identifier != "MeSH":
+                d['id'] = f"{args.identifier}_{d['id']}"
+            return conv.structure(d, Row)
+        
+        for i, (id, _rows) in enumerate(groupby(map(strct, csvreader), lambda e: e.id)):
             # if i > maxn: break
             rows = sorted(_rows, key=lambda e: ((0 if e.lang=="en" else 1), e.lang))
 
-            m = Mesh(id, [])
+            m = Mesh(id, identifier=args.identifier, langs=[])
 
             for lang, [pt, *syns] in groupby(filter(lambda e: e.lang != "N/A", rows), lambda e: e.lang):
                 m.langs.append(MeshLang(
@@ -36,6 +50,7 @@ if __name__ == "__main__":
                 ))
             # pprint(m)
             # print("--------")
+            
             db.db.mesh.insert_one(m.toBsonDict())
             if i % 100 == 0:
                 h.show_progress(i)

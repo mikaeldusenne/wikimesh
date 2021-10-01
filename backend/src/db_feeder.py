@@ -1,6 +1,7 @@
 import logging
 import multiprocessing as mp
 from pprint import pprint
+import argparse
 
 from backend.src import db
 from backend.src.pytypes import V, Mesh
@@ -50,6 +51,7 @@ def add_mesh_links(mesh: Mesh):
     if ans is not None:
         db.db.wikimesh.insert_one({
             "_id": mesh.id,
+            "identifier": mesh.identifier,
             "origin": origin,
             "lang_match": lang,
             "term_match": origin_term,
@@ -64,10 +66,21 @@ def add_mesh_links(mesh: Mesh):
         
 
 def run():
-    from sys import argv
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--force', action='store_true', default=False)
+    parser.add_argument('-i', '--identifier')
     
-    if not (len(argv)>1 and argv[1]=="force"):
+    args = parser.parse_args()
+    identifier = args.identifier
+    force = args.force
+    
+    # identifier = "EFMI"
+    identifier = args.identifier
+    agg_match_identifier = {'identifier': identifier}
+    
+    if not force:
         aggregation = [
+            {"$match": agg_match_identifier},
             {
                 "$lookup": {
                     "from": "wikimesh",
@@ -81,12 +94,33 @@ def run():
             },
             {"$project": {"matched": 0}}
         ]
-        n_to_fetch = next(db.db.mesh.aggregate(aggregation + [{"$count": "n"}]))['n']
-        to_fetch = db.db.mesh.aggregate(aggregation)
+        # query = db.db.mesh.aggregate([
+        #     {"$match": agg_match_identifier},
+        #     {
+        #         "$lookup": {
+        #             "from": "wikimesh",
+        #             "localField": "_id",
+        #             "foreignField": "_id",
+        #             "as": "matched"
+        #         }
+        #     },
+        # ])
+        # next(query)['matched']
+        # len(list(
+        #     query
+        # ))
+        try:
+            n_to_fetch = next(db.db.mesh.aggregate(aggregation + [{"$count": "n"}]))['n']
+        except StopIteration:
+            print('nothing to fetch, congratulations!')
+            n_to_fetch = 0
+            to_fetch = []
+        else:
+            to_fetch = db.db.mesh.aggregate(aggregation)
     else:
-        to_fetch = db.db.mesh.find()
+        to_fetch = db.db.mesh.find(agg_match_identifier)
         
-    print(f"******** {n_to_fetch} / {db.db.mesh.count_documents({})} MeSH items to fetch ********")
+    print(f"******** {n_to_fetch} / {db.db.mesh.count_documents({**agg_match_identifier})} {identifier} items to fetch ********")
     
     # len(list(h.process_by_chunk(add_mesh_links, mesh, len(mesh), chunk_size=max(10, int(len(mesh)/12)), display_progress=True)))
     n_workers = 12*10

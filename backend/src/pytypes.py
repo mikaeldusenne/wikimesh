@@ -172,11 +172,10 @@ class V():
 
 @attr.s(auto_attribs=True)
 class Row(V):
-    idmesh: str
+    id: str
     lang: str
     label: str
     type_label: str
-
 
 
 @attr.s(auto_attribs=True)
@@ -190,3 +189,4 @@ class MeshLang(V):
 class Mesh(V):
     id: str
     langs: List[MeshLang]
+    identifier: str = attr.ib(default="MeSH")

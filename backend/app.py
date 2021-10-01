@@ -68,8 +68,11 @@ flsk = Blueprint(
 )
 
 @cache.memoize(6000000)
-def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, langFilter, langMesh, langMeshType, langWiki):
+def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, langFilter, langMesh, langMeshType, langWiki, identifier=None):
     aggmatch = {}
+    
+    if identifier is not None:
+        aggmatch.update({"identifier": identifier})
     
     if filter_non_empty:
         aggmatch.update({"wikilangs.langs": {"$ne": None}})
@@ -113,7 +116,7 @@ def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, 
             aggmatch.update({
                 f"wikilangs.langs.{langFilter}": {'$exists': langWiki=="yes"}
             })
-            
+        
 
     print(aggmatch)
     n_documents = db.db.mesh_view.count_documents(aggmatch)
@@ -150,9 +153,12 @@ def get_mesh():
         langMesh=request.args.get('langMesh'),
         langMeshType=request.args.get('langMeshType'),
         langWiki=request.args.get('langWiki'),
+        
+        identifier=request.args.get('identifier'),
     )
     print("**************************")
     pprint(args)
+    print("**************************")
     return jsonify(_get_mesh(**args))
 
     
@@ -160,6 +166,12 @@ def get_mesh():
 @flsk.route("/api/languages", methods=["GET"])
 def get_languages():
     return jsonify([e for e in list(db.db.wikimesh.find({}, {'_id': 0, 'lang_match': 1}).distinct("lang_match"))if e is not None])
+
+
+@cache.cached(6000000)
+@flsk.route("/api/identifiers", methods=["GET"])
+def get_identifiers():
+    return jsonify(db.db.mesh.distinct("identifier"))
 
 
 @cache.memoize(6000000)
