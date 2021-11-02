@@ -2,29 +2,29 @@
   <div class="container-fluid">
     <b-row class="justify-content-md-center">
       <b-col class="col-md-6">
-        <h1>Méthodologie</h1>
+        <h1>Methodology</h1>
       </b-col>
     </b-row>
     <b-row class="d-flex justify-content-center">
       <b-col xs="12" sm="8" xl="6">
         <p>
-          Le but de cet outil est de retrouver les entrées wikipédia en différentes langues pour les termes du thésaurus <a href="https://www.hetop.eu/hetop/rep/uk/MESH/" target="_blank">MeSH</a>.
+          The goal of this tool is to find wikipedia entries in different languages for the terms of the <a href="https://www.hetop.eu/hetop/rep/uk/MESH/" target="_blank">MeSH</a> thesaurus.
         </p>
         <p>
-          L'<a href="https://www.mediawiki.org/wiki/API:Main_page" target="_blank">API wikipédia</a> permet de rechercher les <a href="https://www.mediawiki.org/wiki/API:Langlinks" target="_blank">liens linguistiques</a> pour une page donnée, permettant d'explorer en différentes langues les pages d'un sujet donné.
+          The <a href="https://www.mediawiki.org/wiki/API:Main_page" target="_blank">Wikipedia API</a> allows to find the <a href="https://www.mediawiki.org/wiki/API:Langlinks" target="_blank">linguistic links</a> for a given page, allowing for the exploration of a given topic in different languages.
         </p>
         <p>
-          Pour chaque terme MeSH, une recherche de l'entrée correspondante sur wikipedia a été réalisée.<br>
-          Afin de maximiser le rappel, utilisé l'algorithme suivant:<br>
+          For each MeSH term, a search for the corresponding entry on wikipedia was performed.<br>
+          In order to maximize recall, the following algorithm was used:<br>
           <ul style="margin-top: 1rem; max-width: 80%;">
             <li>
-              Si une entrée wikipédia était retrouvée pour le <a href="https://www.nlm.nih.gov/mesh/concept_structure.html" target="_blank">terme préféré</a> en anglais du concept recherché, les liens linguistiques de cette page étaient retournés. 
+              If a wikipedia entry was found for the <a href="https://www.nlm.nih.gov/mesh/concept_structure.html" target="_blank">preferred term</a> in english of the concept of interest, linguistic links of this page were used. 
             </li>
             <li>
-              Sinon, ne recherche utilisant les synonymes du terme MeSH était utilisée. Si l'un des synonymes permettait de retrouver une page wikipédia, les liens associés à cette page étaient retournés.
+              Otherwise, a search using the synonyms of the MeSH term was used. If one of the synonyms allowed to find a Wikipedia entry, the linguistic links associated to this page were used.
             </li>
             <li>
-              Si nécessaire, les étapes ci-dessus étaient répétées pour les autres langues disponibles pour le concept MeSH. La recherche s'arrête dès qu'une page a été retrouvée.
+              If necessary, the abovementionned steps were repeated for the other available languages for the MeSH concept. The search stops as soon as a page was found.
             </li>
           </ul>
             
