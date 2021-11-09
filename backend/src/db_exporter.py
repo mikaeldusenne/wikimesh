@@ -22,16 +22,29 @@ def export_to_csv(dest):
                 ]))
 
 
+def safe_mean(l):
+    return 0 if len(l)==0 else mean(l)
+
+def safe_stdev(l):
+    return 0 if len(l)<2 else stdev(l)
+
+def safe_min(l):
+    return 0 if len(l) == 0 else min(l)
+
+def safe_max(l):
+    return 0 if len(l) == 0 else max(l)
+
+
 def describe(l):
     d = {
         "n": len(l),
-        "mean": mean(l),
-        "sd": stdev(l),
-        "min": min(l),
-        "max": max(l),
+        "mean": safe_mean(l),
+        "sd": safe_stdev(l),
+        "min": safe_min(l),
+        "max": safe_max(l),
         "zero": len([e for e in l if e==0])
     }
-    d['zero_frac'] = d["zero"] / d["n"]
+    d['zero_frac'] = d["zero"] / d["n"] if len(l)>0 else 0
     return d
 
 def mesh_report():
