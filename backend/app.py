@@ -67,7 +67,7 @@ flsk = Blueprint(
     static_folder='./backend/static',
 )
 
-@cache.memoize(6000000)
+@cache.memoize()
 def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, langFilter, langMesh, langMeshType, langWiki, identifier=None):
     aggmatch = {}
     
@@ -138,6 +138,12 @@ def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, 
     return {"count": n_documents, "data": ans}
     
 
+@flsk.route("/api/clear-cache", methods=["GET"])
+def clear_cache():
+    cache.clear()
+    return "ok", 200
+
+
 @flsk.route("/api/mesh", methods=["GET"])
 def get_mesh():
     args = dict(
@@ -162,19 +168,19 @@ def get_mesh():
     return jsonify(_get_mesh(**args))
 
     
-@cache.cached(6000000)
+@cache.cached()
 @flsk.route("/api/languages", methods=["GET"])
 def get_languages():
     return jsonify([e for e in list(db.db.wikimesh.find({}, {'_id': 0, 'lang_match': 1}).distinct("lang_match"))if e is not None])
 
 
-@cache.cached(6000000)
+@cache.cached()
 @flsk.route("/api/identifiers", methods=["GET"])
 def get_identifiers():
     return jsonify(db.db.mesh.distinct("identifier"))
 
 
-@cache.memoize(6000000)
+@cache.memoize()
 @flsk.route('/api/mesh-stats')
 def mesh_stats():
     return jsonify(db_exporter.mesh_stats())
