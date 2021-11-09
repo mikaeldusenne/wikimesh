@@ -190,3 +190,10 @@ class Mesh(V):
     id: str
     langs: List[MeshLang]
     identifier: str = attr.ib(default="MeSH")
+    def __str__(self):
+        l = []
+        for lang in self.langs:
+            if lang.id == "en" or lang.id == "fr":
+                l.append(lang.pt)
+        s = ', '.join(l)
+        return f"{self.id} ({s})"

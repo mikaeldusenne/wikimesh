@@ -95,37 +95,37 @@
         </p>
           <div style="display: flex; justify-content: center;">
             
-            <table class="table table-sm table-bordered table-hover" style="font-family: monospace; width: auto !important;">
-              <caption>Contingency table of the way the Wikipedia pages were found</caption>
-              <thead>
-                <tr>
-                  <th class="title" scope="col"></th>
-                  <th class="title" scope="col">English</th>
-                  <th class="title" scope="col">Other</th>
-                  <th class="title" scope="col"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th class="title" scope="row">Preferred Term</th>
-                  <td class='number'             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='pt' && kb=='en'))[1])"></td>
-                  <td class='number'             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='pt' && kb=='not_en'))[1])"></td>
-                  <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (ka=='pt')).map(e => e[1])))"></th>
-                </tr>
-                <tr>
-                  <th class="title" scope="row">Synonym</th>
-                  <td class="number"             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='syn' && kb=='en'))[1])"></td>
-                  <td class="number"             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='syn' && kb=='not_en'))[1])"></td>
-                  <th class="number" scope="row" v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (ka=='syn')).map(e => e[1])))"></th>
-                </tr>
-                <tr>
-                  <th class="title" scope="row"></th>
-                  <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (kb=='en')).map(e => e[1])))"></th>
-                  <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (kb=='not_en')).map(e => e[1])))"></th>
-                  <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.map(e => e[1])))"></th>
-                </tr>
-              </tbody>
-            </table>
+            <!-- <table class="table table-sm table-bordered table-hover" style="font-family: monospace; width: auto !important;">
+                 <caption>Contingency table of the way the Wikipedia pages were found</caption>
+                 <thead>
+                 <tr>
+                 <th class="title" scope="col"></th>
+                 <th class="title" scope="col">English</th>
+                 <th class="title" scope="col">Other</th>
+                 <th class="title" scope="col"></th>
+                 </tr>
+                 </thead>
+                 <tbody>
+                 <tr>
+                 <th class="title" scope="row">Preferred Term</th>
+                 <td class='number'             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='pt' && kb=='en'))[1])"></td>
+                 <td class='number'             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='pt' && kb=='not_en'))[1])"></td>
+                 <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (ka=='pt')).map(e => e[1])))"></th>
+                 </tr>
+                 <tr>
+                 <th class="title" scope="row">Synonym</th>
+                 <td class="number"             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='syn' && kb=='en'))[1])"></td>
+                 <td class="number"             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='syn' && kb=='not_en'))[1])"></td>
+                 <th class="number" scope="row" v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (ka=='syn')).map(e => e[1])))"></th>
+                 </tr>
+                 <tr>
+                 <th class="title" scope="row"></th>
+                 <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (kb=='en')).map(e => e[1])))"></th>
+                 <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (kb=='not_en')).map(e => e[1])))"></th>
+                 <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.map(e => e[1])))"></th>
+                 </tr>
+                 </tbody>
+                 </table> -->
           </div>
       </b-col>
     </b-row>

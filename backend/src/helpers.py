@@ -1,5 +1,7 @@
 import re
+from time import time
 from itertools import islice, chain
+from datetime import datetime, timedelta
 import traceback
 from math import floor, ceil
 import yaml
@@ -85,13 +87,53 @@ def chunk(l, n=50):
     for i in range(0, len(l), n):
         yield l[i:(i + n)]
 
-def show_progress(k, n=None, length=50, prog='=>', todo=' '):
+
+def no_none(l):
+    return [e for e in l if e is not None]
+
+def flatten(l):
+    return [ee for e in l for ee in e]
+
+def find(pred, l):
+    for e in l:
+        if pred(e):
+            return e
+
+
+def mk_wikipedia_link(lang, term):
+    return f"https://{lang}.wikipedia.org/wiki/{term}"
+
+
+
+# def show_progress(k, n=None, length=50, prog='=>', todo=' '):
+#     '''prints pretty progress'''
+#     details = f"{k:04}"
+#     if n is not None:
+#         ratio = k/n
+#         graphics = '['+max(0, floor(ratio*length)-1)*prog[:1]+prog[-1:]+(ceil((1-ratio)*length)-1) * todo+']'
+#         details = f"{graphics} {details}/ {n:04} ({int(ratio*100)}%)"
+#     print(details, end="\r")
+
+
+def show_progress(k, n=None, length=50, prog='=>', todo=' ', eta_starttime=None, show_speed=False):
     '''prints pretty progress'''
     details = f"{k:04}"
     if n is not None:
         ratio = k/n
         graphics = '['+max(0, floor(ratio*length)-1)*prog[:1]+prog[-1:]+(ceil((1-ratio)*length)-1) * todo+']'
         details = f"{graphics} {details}/ {n:04} ({int(ratio*100)}%)"
+        
+    if eta_starttime is not None:
+        dt = time() - eta_starttime
+        speed = k / dt if dt > 0 else 0
+        if n is None:
+            details=f"{details} -- elapsed: {timedelta(seconds=int(dt))}"
+        else:
+            remaining_time = timedelta(seconds=int((n-k) / speed)) if speed > 0 else None
+            details=f"{details} -- ETA: {remaining_time}"
+        if show_speed:
+            details=f"{details} ({round(speed * 3600)} / hour)"
+            
     print(details, end="\r")
 
 
