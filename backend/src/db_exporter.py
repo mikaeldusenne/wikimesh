@@ -13,12 +13,17 @@ def prepare_csv(l, sep=','):
         return '"'+str(s.replace('"', '""'))+'"'
     return sep.join([quote_cell(s) for s in l]) + "\n"
 
-def export_to_csv(dest):
+def export_to_csv(dest, filtr={}):
     with open(dest, "w", encoding="utf-8") as f:
-        for e in db.db.mesh.find():
-            for lang, traduction in e["links"].items():
+        colname = "IDFMI,LANG,Libelle,URL".split()
+        for e in db.db.wikimesh.find({**filtr, **{"langs": {'$ne': None}}}):
+            for lang, traduction in e["langs"].items():
                 f.write(prepare_csv([
-                    e["_id"], e["title"], lang, traduction
+                    e["_id"].replace('EFMI_', ''),
+                    # e["title"],
+                    lang,
+                    traduction,
+                    f"https://{lang}.wikipedia.org/wiki/{traduction}"
                 ]))
 
 
@@ -231,4 +236,8 @@ if __name__ == "__main__":
     if argv[1] == "stats":
         mesh_report()
     else:
-        export_to_csv(argv[1])
+        if len(argv) > 2:
+            filtr = {'identifier': argv[2]}
+        else:
+            filtr = {}
+        export_to_csv(argv[1], filtr)
