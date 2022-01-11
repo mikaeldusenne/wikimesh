@@ -56,8 +56,8 @@ if __name__ == "__main__":
                 h.show_progress(i)
 
 # V.decode(db.db.mesh.find_one())
-print(db.db.mesh.count_documents({}))
-1        
+# print(db.db.mesh.count_documents({}))
+# 1        
 
 # f = open(filepath, encoding="utf-8")
 

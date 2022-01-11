@@ -2,9 +2,9 @@
   <div class="container-fluid" v-if="stats">
     <b-row class="justify-content-md-center">
       <b-col class="col-md-6">
-        <h1>Statistiques</h1>
+        <h1>Statistics</h1>
         <p>
-          Statistiques descriptives des entrées wikipédia trouvées. 
+          Descriptive stats of the wikipedia entries found. 
         </p>
         <div class="container-fluid form">
           <form>
@@ -24,113 +24,85 @@
     </b-row>
     <div>
       
-      <div class="row justify-content-md-center" style="margin: 1rem;" @keyup.enter="searchData" v-on:submit.prevent>
-        <b-col sm="12" md="8" lg="6" xl="6" >
+      <div class="row justify-content-md-center" style="margin: 1rem;"  v-on:submit.prevent>
+        <b-col sm="12" md="8" lg="6" xl="6" style="margin: 0; padding: 0;">
           <div class="card">
-            <div class="card-header">
-              <div style="margin-bottom: 1rem;"><strong>{{identifier}} translations vs Wikipedia entries</strong></div>
-              <div class="container-fluid form">
-                <form>
-                  <div class="row mb-2 list-item-form">
-                    <label for="selecttdata" class="col-sm-2 col-form-label">See&nbsp;:</label>
-                    <div class="col-sm-10">
-                      <b-form-select
-                        v-model="matchReportView"
-                        :options="matchReportOptions"
-                        class="form-control"
-                      />
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
+            <!-- <div class="card-header">
+                 <div style="margin-bottom: 1rem;"><strong>{{identifier}} translations vs Wikipedia entries</strong></div>
+                 <div class="container-fluid form">
+                 <form>
+                 <div class="row mb-2 list-item-form">
+                 <label for="selecttdata" class="col-sm-2 col-form-label">See&nbsp;:</label>
+                 <div class="col-sm-10">
+                 <b-form-select
+                 v-model="matchReportView"
+                 :options="matchReportOptions"
+                 class="form-control"
+                 />
+                 </div>
+                 </div>
+                 </form>
+                 </div>
+                 </div> -->
             <div class="card-body">
               <p>
                 
-                <div v-if="matchReportView != 'overall'">
-                  Among the {{identifier}} terms in <span class="number">{{langFromCode(matchReportView)}}</span>,
-                </div>
-                <div v-else>
-                  Among all languages of all {{identifier}} terms,
-                </div>
+                <!-- <div v-if="matchReportView != 'overall'">
+                     Among the {{identifier}} terms in <span class="number">{{langFromCode(matchReportView)}}</span>,
+                     </div>
+                     <div v-else>
+                     Among all languages of all {{identifier}} terms,
+                     </div> -->
                 <br>
-                <span class="number" v-html="prettyN(stats.match_report[matchReportView].not_in_wiki || 0)" /> didn't have an associated wikipedia page, <br>
-                <span class="number" v-html="prettyN(stats.match_report[matchReportView].not_in_mesh || 0)" /> had a wikipedia page but no {{identifier}} translation in this language,<br>
-                <span class="number" v-html="prettyN(stats.match_report[matchReportView].no_match || 0)" /> had entries both in the {{identifier}} and in wikipedia, but nor the Preferred Term not the Synonyms corresponded to the wikipedia entry. <br>
+                <span>Number of pre-existing languages per MeSH Term in our database: </span><span style="display: inline;" v-html="describeStats(stats.mesh_terms_stats.mesh)" /> <br />
+                <span>Number of detected Wikipedia languages per MeSH Term:</span> <span v-html="describeStats(stats.mesh_terms_stats.wiki)" />.
+                <div class="plot">
+                  <Barplot
+                    title="Repartition of the number of wikipedia page per term"
+                    xtitle="Number of wikipedia pages"
+                    ytitle="Number of terms"
+                    :xdata="statsplotdata.n_trads.map(e => e[0].toFixed(0))"
+                    :ydata="statsplotdata.n_trads.map(e => e[1])"
+                  />
+                </div>
                 
+                <!-- <span>Number of pre-existing languages per MeSH Term in our database: </span><span style="display: inline;" v-html="describeStats(stats.mesh_terms_stats.mesh)" /> <br /> -->
+                Number of added language thanks to our method: <span v-html="describeStats(calcStats(expandArray(stats.new_langs)))" />
                 
+                <div class="plot">
+                  <Barplot
+                    title="Repartition of the number of new languages per term found by our method "
+                    xtitle="Number of new languages"
+                    ytitle="Number of MeSH Terms"
+                    :xdata="stats.new_langs.filter(e => e[0] > 0).map(e => e[0])"
+                    :ydata="stats.new_langs.filter(e => e[0] > 0).map(e => e[1])"
+                  />
+                </div>
               </p>
               <p>
-                For <span class="number" v-html="prettyN(stats.match_report[matchReportView].pt || 0)" /> {{identifier}} terms, the Preferred Term matched the wikipedia entry.<br>
-                For <span class="number" v-html="prettyN(stats.match_report[matchReportView].syn || 0)" /> {{identifier}} terms, one of the synonyms matched the wikipedia entry.
-              </p>
-              
+                For <span class="number" v-html="prettyN(stats.origins.pt || 0)" /> {{identifier}} terms, the Preferred Term matched the wikipedia entry.<br>
+                For <span class="number" v-html="prettyN(stats.origins.syn || 0)" /> {{identifier}} terms, one of the synonyms matched the wikipedia entry.
+              </p><br />
+              <!-- Number of wikipedia pages per language: <span v-html="describeStats(calcStats(statsplotdata.langs.map(e => e[1])))" /> -->
+              The most frequent languages are: <span class="number" v-for="e in top10lang">{{e}}</span>
+              <div class="plot">
+                <Barplot
+                  title="Repartition of the number of wikipedia entries per language"
+                  xtitle="language"
+                  ytitle="Number of Wikipedia entries"
+                  :xdata="statsplotdata.langs.map(e => e[0])"
+                  :ydata="statsplotdata.langs.map(e => e[1])"
+                />
+              </div>
+
             </div>
           </div>
         </b-col>
         
       </div>
-
-
-      <!-- <pre>
-           {{JSON.stringify(stats.match_report, null, 2)}}
-           </pre> -->
     </div>
-    <b-row class="justify-content-md-center">
-      <b-col sm="12" md="10" lg="8" xl="6" v-if="stats">
-        <p>
-          Among the searched {{identifier}} terms, <span class="number" v-html="prettyN(stats.overall.zero)" /> / <span class="number" v-html="prettyN(stats.overall.n)" /> (<span class="number" v-html="prettyN((stats.overall.zero_frac*100).toFixed(2)) + '%'" />) did not have a corresponding entry on Wikipedia.
-        </p>
-        <p>
-        On average there existed <span class="number" v-html="prettyN(stats.overall.mean.toFixed(0))" /> (DS = <span class="number" v-html="prettyN(stats.overall.sd.toFixed(0))" />) translations per concept found.
-        </p>
-        <p>
-          The most frequent languages are: <span class="number" v-for="e in top10lang">{{e}}</span>
-        </p>
-        <hr>
-        <p>
-          <span class="number" v-html="prettyN(stats.en.overall.n)" /> Documents were found thanks to an english {{identifier}} term (<span class="number" v-html="prettyN(stats.en.overall.mean.toFixed(0))" /> &#177; <span class="number" v-html="prettyN(stats.en.overall.sd.toFixed(0))" /> translation per {{identifier}} term),<br>
-        </p><p>
-          <span class="number" v-html="prettyN(stats.not_en.overall.n)" /> Documents were found thanks to a {{identifier}} term in another language than english (in the event where the english term did not return any Wikipedia entry) (<span class="number" v-html="prettyN(stats.not_en.overall.mean.toFixed(0))" /> &#177; <span class="number" v-html="prettyN(stats.not_en.overall.sd.toFixed(0))" /> translation per {{identifier}} term)<br>
-        </p>
-          <div style="display: flex; justify-content: center;">
-            
-            <!-- <table class="table table-sm table-bordered table-hover" style="font-family: monospace; width: auto !important;">
-                 <caption>Contingency table of the way the Wikipedia pages were found</caption>
-                 <thead>
-                 <tr>
-                 <th class="title" scope="col"></th>
-                 <th class="title" scope="col">English</th>
-                 <th class="title" scope="col">Other</th>
-                 <th class="title" scope="col"></th>
-                 </tr>
-                 </thead>
-                 <tbody>
-                 <tr>
-                 <th class="title" scope="row">Preferred Term</th>
-                 <td class='number'             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='pt' && kb=='en'))[1])"></td>
-                 <td class='number'             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='pt' && kb=='not_en'))[1])"></td>
-                 <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (ka=='pt')).map(e => e[1])))"></th>
-                 </tr>
-                 <tr>
-                 <th class="title" scope="row">Synonym</th>
-                 <td class="number"             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='syn' && kb=='en'))[1])"></td>
-                 <td class="number"             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='syn' && kb=='not_en'))[1])"></td>
-                 <th class="number" scope="row" v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (ka=='syn')).map(e => e[1])))"></th>
-                 </tr>
-                 <tr>
-                 <th class="title" scope="row"></th>
-                 <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (kb=='en')).map(e => e[1])))"></th>
-                 <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (kb=='not_en')).map(e => e[1])))"></th>
-                 <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.map(e => e[1])))"></th>
-                 </tr>
-                 </tbody>
-                 </table> -->
-          </div>
-      </b-col>
-    </b-row>
 
-    <div class="row justify-content-md-center" style="margin: 1rem;" @keyup.enter="searchData" v-on:submit.prevent>
+    <div class="row justify-content-md-center" style="margin: 1rem;" v-on:submit.prevent>
       <b-col sm="12" md="8" lg="6" xl="4" >
         <div class="container-fluid form">
           <form>
@@ -149,32 +121,6 @@
         </div>
       </b-col>
     </div>
-            
-    <b-row class="justify-content-md-center">
-      <b-col sm="12" md="10" lg="8" xl="6" v-if="stats">
-        <div class="plot">
-          <Barplot
-            title="Repartition of the number of translations per term"
-            xtitle="Number of translations"
-            ytitle="Number of terms"
-            :xdata="statsplotdata.n_trads.map(e => e[0].toFixed(0))"
-            :ydata="statsplotdata.n_trads.map(e => e[1])"
-          />
-        </div>
-        <!-- </b-col>
-             <b-col sm="12" md="10" lg="8" xl="6" v-if="stats"> -->
-        <div class="plot">
-          <Barplot
-            title="Repartition of the number of wikipedia entries per language"
-            xtitle="language"
-            ytitle="Number of Wikipedia entries"
-            :xdata="statsplotdata.langs.map(e => e[0])"
-            :ydata="statsplotdata.langs.map(e => e[1])"
-          />
-        </div>
-      </b-col>
-    </b-row>
-
   </div>
 </template>
 
@@ -205,14 +151,14 @@ export default class Stats extends Mixins(MathMixins) {
       text: "All",
       value: null
     },
-    {
-      text: "English",
-      value: "en"
-    },
-    {
-      text: "Everything except english",
-      value: "not_en"
-    },
+    // {
+    //   text: "English",
+    //   value: "en"
+    // },
+  // {
+    //   text: "Everything except english",
+    //   value: "not_en"
+    // },
     {
       text: "Preferred Term",
       value: "pt"
@@ -233,8 +179,21 @@ export default class Stats extends Mixins(MathMixins) {
     }), [e => e.text.toLowerCase()]))
   }
 
-  identifier: null | string = null;
+  identifier: null | string = "MeSH";
   identifiers: string[] = [];
+
+  calcStats(l){
+    return {
+      mean: this.mean(l),
+      sd: this.sd(l),
+      min: Math.min(...l),
+      max: Math.max(...l),
+    }
+  }
+  
+  describeStats(o){
+    return '<span class="number">' + this.prettyN(o.mean.toFixed(2)) + "</span> &#177; " + '<span class="number">' + this.prettyN(o.sd.toFixed(2)) + "</span> (min-max: "+ '<span class="number">' + o.min +"</span>&nbsp;-&nbsp;"+'<span class="number">' + o.max +"</span>) "
+  }
   
   get stats(){
     if(this.allStats && this.identifier){
@@ -252,18 +211,24 @@ export default class Stats extends Mixins(MathMixins) {
       }
     })
   }
-
+  
+  expandArray(l){
+    return l.reduce((acc, [k, v]) => {
+      return acc.concat(Array(v).fill(k))
+    }, [])
+  }
+  
   fetchIdentifiers(){
     axios.get('api/identifiers').then(e => {
       this.identifiers = e.data;
       console.log(this.identifiers)
-      this.identifier = this.identifiers[0];
+      // this.identifier = this.identifiers[0];
     }).catch(console.log)
   }
   
 
   get statsplotdata(){
-    return this.plotData == null ? this.stats : this.stats[this.plotData];
+    return this.stats[this.plotData || "all"];
   }
   
   font: any = {
@@ -276,7 +241,7 @@ export default class Stats extends Mixins(MathMixins) {
   }
   
   get top10lang(){
-    return this.stats.langs.slice(0, 10).map(e => e[0] ).map(e => {
+    return this.statsplotdata.langs.slice(0, 10).map(e => e[0] ).map(e => {
       const code = langCodes.find(ee => ee.code==e)
       return code?code.name:e
     })
@@ -290,7 +255,9 @@ export default class Stats extends Mixins(MathMixins) {
     .get("/api/mesh-stats")
     .then(ans => {
       console.log('stats');
+      // console.log(JSON.stringify(ans.data.MeSH, null, 2));
       console.log(ans.data);
+      console.log(ans.data.MeSH);
       this.allStats = ans.data
     })
     .catch(console.log);
@@ -302,7 +269,7 @@ export default class Stats extends Mixins(MathMixins) {
 }
 </script>
 
-<style scoped>
+<style >
 .row{
   margin-bottom: 2rem;
 }

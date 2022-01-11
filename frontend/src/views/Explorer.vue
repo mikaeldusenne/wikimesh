@@ -4,13 +4,11 @@
       <b-col class="col-md-6" id="explorer-intro">
         <h1>Explorer</h1>
         <p>
-          Cette section permet d'explorer les liens wikipédia retrouvés pour les concepts MeSH.
+          Here you can explore the Wikipedia links found for MeSH concepts.
         </p>
         <p>
-          Survolez les concepts pour voir quel terme MeSH d'un concept a permis de retrouver les articles wikipédia.
-        </p>
-        <p>
-          Les pilules <span class="pill pill-syn-pt">PT</span> et <span class="pill pill-syn-pt">SYN</span> indiquent si la page wikipédia a été trouvée grâce à un terme préféré MeSH ou à un synonyme.
+          The pills <span class="pill pill-syn-pt">PT</span> ans <span class="pill pill-syn-pt">SYN</span>
+          indicate wether Wikipedia links were identified thanks to a MeSH preferred term or a synonym.
         </p>
       </b-col>
     </b-row>
@@ -100,7 +98,7 @@
               <hr>
               <div>
                 <strong>Filter results:</strong>
-                <p><em>Filter the res</em></p>
+                <!-- <p><em>Filter the results</em></p> -->
               </div>
               <label for="lang-match-search" class="col-sm-4 col-form-label">Language:</label>
               <div class="col-sm-8">
@@ -467,6 +465,7 @@ export default class Explorer extends Vue {
   fetchLanguages(){
     axios.get('api/languages').then(e => {
       this.languages = e.data;
+      console.log('LANGUAGES:')
       console.log(this.languages)
     }).catch(console.log)
   }

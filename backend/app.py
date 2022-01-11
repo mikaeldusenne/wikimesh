@@ -15,7 +15,7 @@ import os
 import backend.src.helpers as h
 import backend.src.db as db
 from backend.src import wiki_fetcher as ftc
-from backend.src import mesh_parser
+# from backend.src import mesh_parser
 from backend.src import db_exporter
 
 cache = Cache(config={
@@ -104,7 +104,7 @@ def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, 
             "wikilangs.origin": ptsynfilter.lower()
         })
 
-    if langFilter is not None:
+    if langFilter != "no-english":
         if langMesh != "all":
             d = {'$elemMatch': {'_id': langFilter}}
             if langMesh == "no":
@@ -116,6 +116,16 @@ def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, 
             aggmatch.update({
                 f"wikilangs.langs.{langFilter}": {'$exists': langWiki=="yes"}
             })
+    elif langFilter is None:
+        mk_pred = lambda p, field: (
+            {field: { "$ne": None, "$not": {"$size": 0} }}
+            if p=="yes"
+            else {"$or": [{field: None}, {field: {"$size": 0}}] }
+        )
+        if langMesh != "all":
+            aggmatch.update(mk_pred(langMesh, "langs"))
+        if langWiki != "all":
+            aggmatch.update(mk_pred(langWiki, "wikilangs.langs"))
         
 
     print(aggmatch)
@@ -167,11 +177,39 @@ def get_mesh():
     print("**************************")
     return jsonify(_get_mesh(**args))
 
-    
+
+@cache.cached()
+def wiki_languages_count():
+    ans = list(db.db.wikimesh.aggregate([
+        {
+            "$project": {
+                "langss": {
+                    "$objectToArray": "$langs"
+                }
+            }
+        },
+        {"$project":
+         {"langss.k": 1}
+         },
+        {"$unwind": "$langss"},
+        {"$project": {"l": "$langss.k"}},
+        {"$group":{
+            "_id": "$l",
+            "k":{
+                "$sum":1
+            }
+        }}
+    ]))
+    return ans
+
 @cache.cached()
 @flsk.route("/api/languages", methods=["GET"])
 def get_languages():
-    return jsonify([e for e in list(db.db.wikimesh.find({}, {'_id': 0, 'lang_match': 1}).distinct("lang_match"))if e is not None])
+    return jsonify(list(set([e["_id"] for e in wiki_languages_count()])))
+    # list(db.db.wikimesh.find({}, {'_id': 0, 'lang_match': 1}).limit(10))
+    # db.db.wikimesh.find_one({}, {'_id': 0, 'lang_match': 1})
+    # [e for e in list(db.db.wikimesh.find({}, {'_id': 0, 'lang_match': 1}).distinct("lang_match"))if e is not None]
+    # return jsonify([e for e in list(db.db.wikimesh.find({}, {'_id': 0, 'lang_match': 1}).distinct("lang_match"))if e is not None])
 
 
 @cache.cached()
