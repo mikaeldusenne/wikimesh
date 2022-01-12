@@ -35,7 +35,7 @@ def query_pt_and_syns(lang):
 
 
 def query_langs(mesh):
-    with open(f"logs/meshs/{mesh.id}.txt", "w", encoding="utf-8") as flog:
+    with open(f"logs/meshs/{mesh.identifier}_{mesh.id}.txt", "w", encoding="utf-8") as flog:
         def logf(*args):
             flog.write(" ".join([str(e) for e in args]) + "\n")
         logf(f"query {str(mesh)}\n================")
