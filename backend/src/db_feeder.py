@@ -8,7 +8,7 @@ from multiprocessing.pool import ThreadPool
 from collections import Counter
 from itertools import islice
 from time import time
-import multiprocessing_logging as mpl
+# import multiprocessing_logging as mpl
 
 from backend.src import db
 from backend.src.pytypes import V, Mesh
@@ -75,7 +75,7 @@ def query_langs(mesh):
                 ans[lang] = c.most_common()[0][0]
 
             if len(ans):
-                logf(f"{mesh} -> {len(ans)} langs")
+                logf(f"****************\n****************\n\n{mesh} -> {len(ans)} langs: \n********\n{ans}\n********")
                 return {
                     "_id": mesh.id,
                     "identifier": mesh.identifier,
