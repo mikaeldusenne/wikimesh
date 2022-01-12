@@ -1,3 +1,4 @@
+import os
 import logging
 import multiprocessing as mp
 from pprint import pprint
@@ -32,56 +33,62 @@ def query_pt_and_syns(lang):
     return None, None, None
 
 
+
 def query_langs(mesh):
-    print(f"query {str(mesh)}")
-    which=["pt", "syn"]
-    def run(which=["pt", "syn"]):
-        if len(which) == 0:
-            print(f"no result for {str(mesh)}", end="\r")
-            # logging.info(f'no result for {str(mesh)}')
-            return {
-                "_id": mesh.id,
-                "langs": None
-            }
-        # query all pts
-        w, *ws = which
-        # logging.info(f'\n-------- {str(mesh)} -> searching for {w} --------')
-        l = []
-        if "pt" in w:
-            l = l + [(lang.pt, lang.id) for lang in mesh.langs]
+    with open(f"logs/meshs/{mesh.id}.txt", "w", encoding="utf-8") as flog:
+        def logf(*args):
+            flog.write(" ".join([str(e) for e in args]) + "\n")
+        logf(f"query {str(mesh)}\n================")
+        which=["pt", "syn"]
+        def run(which=["pt", "syn"]):
+            if len(which) == 0:
+                logf(f"no result for {str(mesh)}")
+                # logging.info(f'no result for {str(mesh)}')
+                return {
+                    "_id": mesh.id,
+                    "langs": None
+                }
+            # query all pts
+            w, *ws = which
+            logf(f'\n-------- {str(mesh)} -> searching for {w} --------')
+            l = []
+            if "pt" in w:
+                l = l + [(lang.pt, lang.id) for lang in mesh.langs]
+
+            if "syn" in w:
+                l = l + [
+                    (syn, lang.id)
+                    for lang in mesh.langs
+                    for syn in lang.syns
+                ]
             
-        if "syn" in w:
-            l = l + [
-                (syn, lang.id)
-                for lang in mesh.langs
-                for syn in lang.syns
-            ]
-        # print(f'{len(l)} available: {l}')
-        ll = list(zip([e[0] for e in l], map(lambda e: ftc.query_wiki_langs(*e), l)))
-        pts_resp = {k: v for k, v in ll if v is not None}
-        # logging.info(f'{len(pts_resp)} successful queries: {pts_resp.keys()}')
-        # pprint(pts_resp)
+            logf(f'{len(l)} available: {l}')
+            
+            ll = list(zip([e[0] for e in l], map(lambda e: ftc.query_wiki_langs(*e), l)))
+            pts_resp = {k: v for k, v in ll if v is not None}
+            # logging.info(f'{len(pts_resp)} successful queries: {pts_resp.keys()}')
+            # logf(pts_resp)
 
-        ans = {}
-        for lang in sorted(list(set(h.flatten(pts_resp.values())))):
-            c = Counter(h.no_none([ee.get(lang) for ee in pts_resp.values()]))
-            ans[lang] = c.most_common()[0][0]
+            ans = {}
+            for lang in sorted(list(set(h.flatten(pts_resp.values())))):
+                c = Counter(h.no_none([ee.get(lang) for ee in pts_resp.values()]))
+                ans[lang] = c.most_common()[0][0]
 
-        if len(ans):
-            print(f"{mesh} -> {len(ans)} langs")
-            return {
-                "_id": mesh.id,
-                "identifier": mesh.identifier,
-                "lang_match": None,
-                "origin": w,
-                "term_match": None,
-                "langs": ans
-            }
-        else:
-            return run(ws)
-    ans = run(which)
-    # logging.info(f"DONE {mesh} --> {ans}")
-    return ans
+            if len(ans):
+                logf(f"{mesh} -> {len(ans)} langs")
+                return {
+                    "_id": mesh.id,
+                    "identifier": mesh.identifier,
+                    "lang_match": None,
+                    "origin": w,
+                    "term_match": None,
+                    "langs": ans
+                }
+            else:
+                return run(ws)
+        ans = run(which)
+        # logging.info(f"DONE {mesh} --> {ans}")
+        return ans
 
 
 # identifier = "EFMI"
@@ -181,6 +188,7 @@ def test():
 
 
 if __name__ == "__main__":
+    os.makedirs('logs/meshs', exist_ok=True)
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--force', action='store_true', default=False)
     parser.add_argument('-i', '--identifier')
