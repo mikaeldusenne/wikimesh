@@ -115,7 +115,7 @@ def mk_wikipedia_link(lang, term):
 #     print(details, end="\r")
 
 
-def show_progress(k, n=None, length=50, prog='=>', todo=' ', eta_starttime=None, show_speed=False):
+def show_progress(k, n=None, length=50, prog='=>', todo=' ', eta_starttime=None, show_speed=False, end="\r"):
     '''prints pretty progress'''
     details = f"{k:04}"
     if n is not None:
@@ -134,7 +134,7 @@ def show_progress(k, n=None, length=50, prog='=>', todo=' ', eta_starttime=None,
         if show_speed:
             details=f"{details} ({round(speed * 3600)} / hour)"
             
-    print(details, end="\r")
+    print(details, end=end)
 
 
 def process_by_chunk(f, l, len_l=None, chunk_size=50, display_progress=False):

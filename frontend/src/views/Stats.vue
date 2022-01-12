@@ -58,9 +58,9 @@
                 <span>Number of detected Wikipedia languages per MeSH Term:</span> <span v-html="describeStats(stats.mesh_terms_stats.wiki)" />.
                 <div class="plot">
                   <Barplot
-                    title="Repartition of the number of wikipedia page per term"
-                    xtitle="Number of wikipedia pages"
-                    ytitle="Number of terms"
+                    title="Number of languages per MeSH descriptor"
+                    xtitle="Number of languages (Wikipedia pages)"
+                    ytitle="MeSH descriptors"
                     :xdata="statsplotdata.n_trads.map(e => e[0].toFixed(0))"
                     :ydata="statsplotdata.n_trads.map(e => e[1])"
                   />

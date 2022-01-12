@@ -183,7 +183,7 @@ def gen_report(**filtr):
     }
 
 
-@cache
+# @cache
 def report_match_mesh_wiki(identifier):
     print('**** report_match_mesh_wiki ****', identifier)
     # pprint(db.db.mesh_view.find_one())
@@ -204,7 +204,7 @@ def report_match_mesh_wiki(identifier):
     return summary
 
 
-@cache
+# @cache
 def report_new_langs(identifier):
     # pprint(db.db.mesh_view.find_one())
     # # [{'cs': 'not_in_wiki', 'ja': 'not_in_wiki', 'ru': 'not_in_wiki', 'en': 'syn', 'de': 'not_in_wiki', ...}]
@@ -213,39 +213,6 @@ def report_new_langs(identifier):
     return list(Counter([len([e for e in ee.values() if e == "not_in_mesh"]) for ee in l]).items())
 
 # @cache
-# def mesh_stats():
-#     def run_identifier(identifier):
-#         all_links = gen_report({"identifier": identifier})
-#         def prepare_contingency(e):
-#             e["lang_match"] = "en" if e["lang_match"] == "en" else "not_en"
-#             return e
-
-#         l = [prepare_contingency(e) for e in db.db.wikimesh.find({"identifier": identifier,'langs': {"$ne": None}}, {"_id": 0, "origin": 1, "lang_match": 1})]
-#         ka = "origin"
-#         kb = "lang_match"
-
-#         return {
-#             **all_links,
-#             **dict(
-#                 not_en = gen_report({"identifier": identifier, "lang_match": {"$ne": "en"}, "langs": {"$ne": None}}),
-#                 en =     gen_report({"identifier": identifier, "lang_match": "en"}),
-#                 pt =     gen_report({"identifier": identifier, "origin": "pt"}),
-#                 syn =    gen_report({"identifier": identifier, "origin": "syn"}),
-#             ),
-#             "contingency": [
-#                 [[kae, kbe], len([e for e in l if e[ka]==kae and e[kb]==kbe])]
-#                 for kae in set([e[ka] for e in l])
-#                 for kbe in set([e[kb] for e in l])
-#             ],
-#             'match_report': report_match_mesh_wiki(identifier),
-#         }
-#     return {
-#         id: run_identifier(id)
-#         for id in db.db.mesh.distinct("identifier")
-#     }
-
-
-@cache
 def get_all_reports(identifier):
     return dict(
                 all = gen_report(identifier=identifier),
@@ -255,7 +222,7 @@ def get_all_reports(identifier):
                 syn =    gen_report(identifier=identifier, origin="syn"),
             )
 
-@cache
+# @cache
 def mesh_stats():
     identifier = "MeSH"
     def run_identifier(identifier):

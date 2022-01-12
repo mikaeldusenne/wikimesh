@@ -218,7 +218,7 @@ def get_identifiers():
     return jsonify(db.db.mesh.distinct("identifier"))
 
 
-@cache.memoize()
+@cache.cached()
 @flsk.route('/api/mesh-stats')
 def mesh_stats():
     return jsonify(db_exporter.mesh_stats())

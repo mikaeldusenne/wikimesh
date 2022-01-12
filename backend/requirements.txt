@@ -27,3 +27,4 @@ attrs
 mypy
 cattrs
 matplotlib
+multiprocessing_logging

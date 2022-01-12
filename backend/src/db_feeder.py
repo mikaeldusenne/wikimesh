@@ -7,6 +7,7 @@ from multiprocessing.pool import ThreadPool
 from collections import Counter
 from itertools import islice
 from time import time
+import multiprocessing_logging as mpl
 
 from backend.src import db
 from backend.src.pytypes import V, Mesh
@@ -32,16 +33,16 @@ def query_pt_and_syns(lang):
 
 
 def query_langs(mesh):
-    # logging.info(f"query {str(mesh)}")
+    print(f"query {str(mesh)}")
     which=["pt", "syn"]
-    # which = ['ptsyn']
     def run(which=["pt", "syn"]):
         if len(which) == 0:
+            print(f"no result for {str(mesh)}", end="\r")
             # logging.info(f'no result for {str(mesh)}')
             return {
-            "_id": mesh.id,
-            "langs": None
-        }
+                "_id": mesh.id,
+                "langs": None
+            }
         # query all pts
         w, *ws = which
         # logging.info(f'\n-------- {str(mesh)} -> searching for {w} --------')
@@ -55,15 +56,8 @@ def query_langs(mesh):
                 for lang in mesh.langs
                 for syn in lang.syns
             ]
-        # print(l)
-        # logging.info(f'{len(l)} available: {l}')
-        #pool = ThreadPool(processes=len(l))
-        #ll = list(zip([e[0] for e in l], pool.starmap(ftc.query_wiki_langs, l)))
-        #pool.close()
-        #pool.join()
-        # reload(ftc)
+        # print(f'{len(l)} available: {l}')
         ll = list(zip([e[0] for e in l], map(lambda e: ftc.query_wiki_langs(*e), l)))
-        # pprint(ll)
         pts_resp = {k: v for k, v in ll if v is not None}
         # logging.info(f'{len(pts_resp)} successful queries: {pts_resp.keys()}')
         # pprint(pts_resp)
@@ -74,6 +68,7 @@ def query_langs(mesh):
             ans[lang] = c.most_common()[0][0]
 
         if len(ans):
+            print(f"{mesh} -> {len(ans)} langs")
             return {
                 "_id": mesh.id,
                 "identifier": mesh.identifier,
@@ -84,7 +79,9 @@ def query_langs(mesh):
             }
         else:
             return run(ws)
-    return run(which)
+    ans = run(which)
+    # logging.info(f"DONE {mesh} --> {ans}")
+    return ans
 
 
 # identifier = "EFMI"
@@ -122,20 +119,22 @@ def run(identifier="MeSH", force=False):
         to_fetch = db.db.mesh.find(agg_match_identifier)
         n_to_fetch = db.db.mesh.count_documents(agg_match_identifier)
         
-    print(f"******** {n_to_fetch} / {db.db.mesh.count_documents({**agg_match_identifier})} {identifier} items to fetch ********")
+    logging.info(f"******** {n_to_fetch} / {db.db.mesh.count_documents({**agg_match_identifier})} {identifier} items to fetch ********")
     
     # len(list(h.process_by_chunk(add_mesh_links, mesh, len(mesh), chunk_size=max(10, int(len(mesh)/12)), display_progress=True)))
     n_workers = 12*5
+    # mpl.install_mp_handler()
     pool = mp.Pool(n_workers)
     to_fetch = list(to_fetch)
     total_len = len(to_fetch)
     starttime = time()
     i = 0
+    # for e in map(query_langs, map(V.decode, to_fetch)):
     for e in pool.imap_unordered(query_langs, map(V.decode, to_fetch), chunksize=20):
         # for mesh, lang, origin, origin_term, ans in l:
         # print(i)
-        if i % 10 == 0:
-            h.show_progress(i, total_len, eta_starttime=starttime, show_speed=True)
+        if i % 1 == 0:
+            h.show_progress(i, total_len, eta_starttime=starttime, show_speed=True, end="\n")
         i += 1
         
         if e is not None:
