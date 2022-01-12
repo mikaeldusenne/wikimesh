@@ -13,6 +13,7 @@ def prepare_csv(l, sep=','):
         return '"'+str(s.replace('"', '""'))+'"'
     return sep.join([quote_cell(s) for s in l]) + "\n"
 
+
 def export_to_csv(dest, filtr={}):
     with open(dest, "w", encoding="utf-8") as f:
         colname = "IDFMI,LANG,Libelle,URL".split()
@@ -130,7 +131,7 @@ def sumdicts(da, db):
     return d
 
 
-@cache
+# @cache
 def list_match_mesh_wiki(identifier):
     print(f"**** list_match_mesh_wiki called for {repr(identifier)} ****")
     def get_wikilangs(m):

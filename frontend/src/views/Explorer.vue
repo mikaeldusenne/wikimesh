@@ -110,16 +110,16 @@
                 />
               </div>
             </div>
-            <div key="CB" v-if="showAdvancedSearch" class="row mb-2 list-item-form">
-              <label for="lang-match-search" class="col-sm-4 col-form-label">MeSH:</label>
-              <div class="col-sm-8" style="display: inline-grid; grid-template-columns: 33% 33% 33%">
-                <div class="form-check" style="display: inline;" v-for="yna in ['yes', 'no', 'all']">
-                  <input class="form-check-input" @change="searchData"
-                         :id="'langmesh-'+yna" type="radio" name="langMesh" :value="yna" v-model="langMesh">
-                  <label class="form-check-label" :for="'langmesh-'+yna" >{{yna}}</label>
-                </div>
-              </div>
-            </div>
+            <!-- <div key="CB" v-if="showAdvancedSearch" class="row mb-2 list-item-form">
+                 <label for="lang-match-search" class="col-sm-4 col-form-label">MeSH:</label>
+                 <div class="col-sm-8" style="display: inline-grid; grid-template-columns: 33% 33% 33%">
+                 <div class="form-check" style="display: inline;" v-for="yna in ['yes', 'no', 'all']">
+                 <input class="form-check-input" @change="searchData"
+                 :id="'langmesh-'+yna" type="radio" name="langMesh" :value="yna" v-model="langMesh">
+                 <label class="form-check-label" :for="'langmesh-'+yna" >{{yna}}</label>
+                 </div>
+                 </div>
+                 </div> -->
             <div key="CD" v-if="showAdvancedSearch" class="row mb-2 list-item-form">
               <label for="lang-match-search" class="col-sm-4 col-form-label">Wikipedia:</label>
               <div class="col-sm-8" style="display: inline-grid; grid-template-columns: 33% 33% 33%">
@@ -146,7 +146,7 @@
             <hr key="Z" v-if="showAdvancedSearch"/>
             <div key="E" v-if="showAdvancedSearch"
                  class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Limiter la isualisation des liens à certaines langues">
-              <label for="langview" class="col-sm-3 col-form-label">View&nbsp;only&nbsp;:</label>
+              <label for="langview" class="col-sm-3 col-form-label">View&nbsp;:</label>
               <div class="col-sm-9">
                 <b-form-select
                   id="langview"

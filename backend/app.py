@@ -104,7 +104,18 @@ def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, 
             "wikilangs.origin": ptsynfilter.lower()
         })
 
-    if langFilter != "no-english":
+    if langFilter is None:
+        mk_pred = lambda p, field: (
+            {field: { "$ne": None, "$not": {"$size": 0} }}
+            if p=="yes"
+            else {"$or": [{field: None}, {field: {"$size": 0}}] }
+        )
+        if langMesh != "all":
+            aggmatch.update(mk_pred(langMesh, "langs"))
+        if langWiki != "all":
+            aggmatch.update(mk_pred(langWiki, "wikilangs.langs"))
+            
+    elif langFilter != "no-english":
         if langMesh != "all":
             d = {'$elemMatch': {'_id': langFilter}}
             if langMesh == "no":
@@ -116,17 +127,9 @@ def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, 
             aggmatch.update({
                 f"wikilangs.langs.{langFilter}": {'$exists': langWiki=="yes"}
             })
-    elif langFilter is None:
-        mk_pred = lambda p, field: (
-            {field: { "$ne": None, "$not": {"$size": 0} }}
-            if p=="yes"
-            else {"$or": [{field: None}, {field: {"$size": 0}}] }
-        )
-        if langMesh != "all":
-            aggmatch.update(mk_pred(langMesh, "langs"))
-        if langWiki != "all":
-            aggmatch.update(mk_pred(langWiki, "wikilangs.langs"))
-        
+
+    # if sortBy == "wikilangs":
+    #     db.mesh_view.aggregate([{"$project": {"wikilangs.langs": {"$ifNull": ["$wikilangs.langs", {}]}}}, {"$project": {"klangs": {"$size": {"$objectToArray": "$wikilangs.langs"}}}}, {"$sort": {"klangs": -1}}, {"$limit": 1}])
 
     print(aggmatch)
     n_documents = db.db.mesh_view.count_documents(aggmatch)
