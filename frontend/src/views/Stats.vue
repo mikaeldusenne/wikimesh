@@ -82,6 +82,7 @@
               <p>
                 For <span class="number" v-html="prettyN(stats.origins.pt || 0)" /> {{identifier}} terms, the Preferred Term matched the wikipedia entry.<br>
                 For <span class="number" v-html="prettyN(stats.origins.syn || 0)" /> {{identifier}} terms, one of the synonyms matched the wikipedia entry.
+                For <span class="number" v-html="prettyN(stats.origins.syn || 0)" /> {{identifier}} terms, one of the synonyms matched the wikipedia entry.
               </p><br />
               <!-- Number of wikipedia pages per language: <span v-html="describeStats(calcStats(statsplotdata.langs.map(e => e[1])))" /> -->
               The most frequent languages are: <span class="number" v-for="e in top10lang">{{e}}</span>
@@ -94,7 +95,7 @@
                   :ydata="statsplotdata.langs.map(e => e[1])"
                 />
               </div>
-
+              <PaginaTable :records="statsplotdata.langs.map(e => { return {lang: langFromCode(e[0]), n: e[1]}})" />
             </div>
           </div>
         </b-col>
@@ -131,6 +132,7 @@ import axios from "axios";
 import _ from 'lodash';
 import Barplot from "@/components/Barplot.vue";
 import Boxplot from "@/components/Boxplot.vue";
+import PaginaTable from "@/components/PaginaTable.vue";
 import { langCodes } from "@/langCodes.js";
 import MathMixins from "@/MathMixins";
 
@@ -138,7 +140,8 @@ import MathMixins from "@/MathMixins";
 @Component({
   components: {
     Barplot,
-    Boxplot
+    Boxplot,
+    PaginaTable,
   },
   mixins: [MathMixins]
 })

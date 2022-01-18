@@ -40,20 +40,19 @@ export default class App extends Vue {}
   margin-bottom: 0rem !important;
 }
 
-.pagination .page-link{
-  color: #eee !important;
-}
+/* .pagination .page-link{
+   color: #eee !important;
+   }
 
+   .pagination .page-item.active .page-link{
+   background-color: #666 !important;
+   border-color: #666 !important;
+   box-shadow: none !important;
+   }
 
-.pagination .page-item.active .page-link{
-  background-color: #666 !important;
-  border-color: #666 !important;
-  box-shadow: none !important;
-}
-
-.pagination .page-item .page-link{
-  background-color: #444 !important;
-  border-color: #444 !important;
-  box-shadow: none !important;
-}
+   .pagination .page-item .page-link{
+   background-color: #444 !important;
+   border-color: #444 !important;
+   box-shadow: none !important;
+   } */
 </style>
