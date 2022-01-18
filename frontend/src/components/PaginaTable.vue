@@ -58,7 +58,7 @@ export default class Barplot extends Vue {
 
   get fieldsToUse(){
     return (this.fields
-         && this.fields.map(e => typeof e == "string" && e || e.content)
+         && this.fields
          || this.records.map(Object.keys).reduce((acc, e) => {
            return _.uniq(acc.concat(e))
          })
