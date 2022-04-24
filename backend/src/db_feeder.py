@@ -165,9 +165,10 @@ def test():
     reload(h)
     # ftc.query_wiki_langs("anticorps", "fr")
     normal()
-    test_meshs = "001249 055811 000906 007136 000009".split()
-    test_meshs = "000029 000037 000081322".split()
-    test_meshs = "000029".split()
+    # test_meshs = "001249 055811 000906 007136 000009".split()
+    # test_meshs = "000029 000037 000081322".split()
+    # test_meshs = "000029".split()
+    test_meshs = "000066829".split()
     for id in test_meshs:
         mesh = db.get_mesh(id)
         print(mesh)
