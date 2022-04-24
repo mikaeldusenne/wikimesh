@@ -33,7 +33,6 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { Plotly } from "vue-plotly";
 import _ from 'lodash';
 
 @Component({

@@ -25,7 +25,7 @@
     <div>
       
       <div class="row justify-content-md-center" style="margin: 1rem;"  v-on:submit.prevent>
-        <b-col sm="12" md="8" lg="6" xl="6" style="margin: 0; padding: 0;">
+        <b-col sm="12" md="10" lg="8" xl="6" style="margin: 0; padding: 0;">
           <div class="card">
             <!-- <div class="card-header">
                  <div style="margin-bottom: 1rem;"><strong>{{identifier}} translations vs Wikipedia entries</strong></div>

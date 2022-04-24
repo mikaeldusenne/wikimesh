@@ -21,6 +21,7 @@ export default class Barplot extends Vue {
   font: any = {
     family: 'Source Code Pro',
     color: "#000",
+    size: 11,
   }
   
   @Prop({default: ""})
@@ -42,8 +43,8 @@ export default class Barplot extends Vue {
     height: 350,
     responsive: true,
     barmode: "stack",
-    plot_bgcolor: "#ccc",
-    paper_bgcolor: "#ccc",
+    plot_bgcolor: "#fff",
+    paper_bgcolor: "#fff",
     font: this.font,
     legend: {
       xanchor: "right",
