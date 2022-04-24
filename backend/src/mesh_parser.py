@@ -15,7 +15,7 @@ from backend.src import db
 from backend.src import helpers as h
 
 
-def parser_julien(path, identifier):
+def parser_julien(path, identifier, *args, **kwargs):
     with open(path, encoding="utf-8") as f:
         csvreader = csv.reader(f, delimiter=',', quotechar='"')
         columns = [e.lower() for e in next(csvreader)]
@@ -75,13 +75,13 @@ if __name__ == "__main__":
     parser.add_argument('--source', default="julien")
     args = parser.parse_args()
 
-    parser_flavien(
-        path="./backend/data/EFMI_wikimesh.csv",
-        identifier="EFMIMO",
-    )
+    # parser_flavien(
+    #     path="./backend/data/EFMI_wikimesh.csv",
+    #     identifier="EFMIMO",
+    # )
     
-    db.connect()
-    print(db.db)
+    # db.connect()
+    # print(db.db)
     
     dict(
         julien=parser_julien,
