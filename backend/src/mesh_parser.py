@@ -15,32 +15,23 @@ from backend.src import db
 from backend.src import helpers as h
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--force', action='store_true', default=False)
-    parser.add_argument('-i', '--identifier')
-    parser.add_argument('path', help='path to file')
-    args = parser.parse_args()
-
-    print(args)
-    # db.client
-    # filepath = "backend/data/mesh_descr_ml.csv"
-    with open(args.path, encoding="utf-8") as f:
+def parser_julien(path, identifier):
+    with open(path, encoding="utf-8") as f:
         csvreader = csv.reader(f, delimiter=',', quotechar='"')
         columns = [e.lower() for e in next(csvreader)]
         columns[0] = "id"
         
         def strct(e):
             d = dict(zip(columns, e))
-            if args.identifier != "MeSH":
-                d['id'] = f"{args.identifier}_{d['id']}"
+            if identifier != "MeSH":
+                d['id'] = f"{identifier}_{d['id']}"
             return conv.structure(d, Row)
         
         for i, (id, _rows) in enumerate(groupby(map(strct, csvreader), lambda e: e.id)):
             # if i > maxn: break
             rows = sorted(_rows, key=lambda e: ((0 if e.lang=="en" else 1), e.lang))
 
-            m = Mesh(id, identifier=args.identifier, langs=[])
+            m = Mesh(id, identifier=identifier, langs=[])
 
             for lang, [pt, *syns] in groupby(filter(lambda e: e.lang != "N/A", rows), lambda e: e.lang):
                 m.langs.append(MeshLang(
@@ -54,6 +45,52 @@ if __name__ == "__main__":
             db.db.mesh.insert_one(m.toBsonDict())
             if i % 100 == 0:
                 h.show_progress(i)
+
+
+def parser_flavien(path, identifier, lang="fr", *args, **kwargs):
+    with open(path, encoding="utf-8") as f:
+        csvreader = csv.reader(f, delimiter=',', quotechar='"')
+        
+        for i, row in enumerate(csvreader):
+            [id, pt, *syns] = row
+            m = Mesh(id, identifier=identifier, langs=[])
+            
+            m.langs.append(MeshLang(
+                id=lang,
+                pt=pt,
+                syns=syns
+            ))
+            
+            db.db.mesh.insert_one(m.toBsonDict())
+            if i % 100 == 0:
+                h.show_progress(i)
+
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    # parser.add_argument('-f', '--force', action='store_true', default=False)
+    parser.add_argument('-i', '--identifier')
+    parser.add_argument('path', help='path to file')
+    parser.add_argument('--source', default="julien")
+    args = parser.parse_args()
+
+    parser_flavien(
+        path="./backend/data/EFMI_wikimesh.csv",
+        identifier="EFMIMO",
+    )
+    
+    db.connect()
+    print(db.db)
+    
+    dict(
+        julien=parser_julien,
+        flavien=parser_flavien,
+    )[args.source](**vars(args))
+    
+    # print(args)
+    # db.client
+    # filepath = "backend/data/mesh_descr_ml.csv"
 
 # V.decode(db.db.mesh.find_one())
 # print(db.db.mesh.count_documents({}))
