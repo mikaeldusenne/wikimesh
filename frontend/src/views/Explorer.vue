@@ -419,6 +419,9 @@ export default class Explorer extends Vue {
     if(this.$route.query.search != this.search){
       this.$router.replace({path: this.$route.path, query: {...this.$route.query, ...{search: this.search}}}).catch(console.log)
     }
+    if(this.$route.query.identifier != this.identifier){
+      this.$router.replace({path: this.$route.path, query: {...this.$route.query, ...{identifier: this.identifier}}}).catch(console.log)
+    }
     this.fetchData();
   }
   
@@ -496,6 +499,7 @@ export default class Explorer extends Vue {
   
   mounted() {
     this.search = (this.$route.query.search as string) || "";
+    this.identifier = this.$route.query.identifier || null;
 
     this.showAdvancedSearch = this.tryParseLocalStorage("showAdvancedSearch") || this.showAdvancedSearch
     this.ptsynMatchSearch = this.tryParseLocalStorage("ptsynMatchSearch") || this.ptsynMatchSearch
