@@ -448,7 +448,7 @@ export default class Explorer extends Vue {
       this.nMesh = ans.data.count
       this.fetching = false;
       this.mesh = ans.data.data.map(e => {
-        e.showDetails = false;
+        e.showDetails = true;
         e.wikilangs.langs = _.sortBy(Object.entries(e.wikilangs.langs || {}), [
           ([k, v]) => this.langFromCode(k).toLowerCase()
         ])
