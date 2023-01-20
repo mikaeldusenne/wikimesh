@@ -15,8 +15,8 @@ https://mikaeldusenne.com/wikimesh/
 
 ### csv
 
-python -m backend.src.mesh_parser --source flavien -i DECS backend/data/Decs_wikimesh.csv
+python -m backend.src.mesh_parser --source <the_source_name> -i <the_name> backend/<filename>.csv
 
 ### Fetch data
 
-python -m backend.src.db_feeder -i DECS
+python -m backend.src.db_feeder -i <the_name>
