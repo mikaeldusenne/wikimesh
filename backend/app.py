@@ -193,7 +193,7 @@ def health_check():
     logging.warning("warning log")
     logging.error("error log")
     # logging.exception("exception log")
-    return make_response("OK", 200)
+    return "OK", 200
 
 
 @flsk.route('/', defaults={'path': ''})
