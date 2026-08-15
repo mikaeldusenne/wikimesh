@@ -1,5 +1,5 @@
 import re
-from time import time
+from time import time, sleep
 from itertools import islice, chain
 from datetime import datetime, timedelta
 import traceback
@@ -58,7 +58,6 @@ def dict_set_path(d, path, val):
         d[p] = dict_set_path(dt, ps, val)
     return d
     
-
 def subset_tree(tree, subsetter):
     d = {}
     for p in subsetter:
