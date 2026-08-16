@@ -10,6 +10,9 @@ case "$CMD" in
     dev)
         docker-compose -f docker-compose.yml  -f development.yml -f frontend.yml up --abort-on-container-exit $@
         ;;
+    backend)
+        docker-compose -f docker-compose.yml -f development.yml up --abort-on-container-exit $@
+        ;;
     init)
         echo "setting secrets..."
         ./init_secrets.sh
