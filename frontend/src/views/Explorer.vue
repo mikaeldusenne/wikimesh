@@ -114,6 +114,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getJson, requestGate } from "@/api";
+import { explorerQuery, pickIdentifier } from "@/explorerState";
 import { langCodes } from "@/langCodes.js";
 
 type Option = { text: string; value: string | null };
@@ -127,10 +128,11 @@ type MeshResponse = { count: number; data: Mesh[] };
 
 const route = useRoute(), router = useRouter(), requests = requestGate();
 const perPage = 10, nMesh = ref(0), currentPage = ref(1), mesh = ref<Mesh[]>([]);
-const search = ref(String(route.query.search || "")), filterOnlyNonEmpty = ref(true);
+const search = ref(String(route.query.search || "")), filterOnlyNonEmpty = ref(false);
 const fetching = ref(false), error = ref(""), metadataError = ref("");
 const showAdvancedSearch = ref(false), langMatchSearch = ref<string | null>(null), ptsynMatchSearch = ref<string | null>(null);
-const langSearch = ref<string | null>(null), langView = ref<string | null>(null), identifier = ref<string | null>(null);
+const langSearch = ref<string | null>(null), langView = ref<string | null>(null);
+const identifier = ref<string | null>(String(route.query.identifier || "") || null);
 const langMesh = ref("all"), langWiki = ref("all"), languages = ref<string[]>([]), identifiers = ref<string[]>([]);
 
 const pageCount = computed(() => Math.max(1, Math.ceil(nMesh.value / perPage)));
@@ -174,11 +176,12 @@ async function fetchMetadata() {
     [languages.value, identifiers.value] = await Promise.all([
       getJson<string[]>("api/languages"), getJson<string[]>("api/identifiers"),
     ]);
+    identifier.value = pickIdentifier(identifier.value, identifiers.value);
   } catch (e) { metadataError.value = e instanceof Error ? e.message : "Filtres indisponibles"; }
 }
 
 function searchData() {
-  void router.replace({ query: search.value ? { search: search.value } : {} });
+  void router.replace({ query: explorerQuery(search.value, identifier.value) });
   if (currentPage.value === 1) void fetchData(); else currentPage.value = 1;
 }
 function toggleAdvancedSearch() {
@@ -199,11 +202,12 @@ watch(currentPage, fetchData);
 watch(filterOnlyNonEmpty, searchData);
 watch(langMatchSearch, v => localStorage.setItem("langMatchSearch", JSON.stringify(v)));
 watch(ptsynMatchSearch, v => localStorage.setItem("ptsynMatchSearch", JSON.stringify(v)));
-onMounted(() => {
+onMounted(async () => {
   showAdvancedSearch.value = stored("showAdvancedSearch", false);
   langMatchSearch.value = stored("langMatchSearch", null);
   ptsynMatchSearch.value = stored("ptsynMatchSearch", null);
-  void Promise.all([fetchMetadata(), fetchData()]);
+  await fetchMetadata();
+  void fetchData();
 });
 onBeforeUnmount(requests.abort);
 </script>
