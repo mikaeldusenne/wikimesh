@@ -36,3 +36,4 @@ jobs:
       - run: docker build -t wikimesh-frontend:test .
       - run: sh -n ../run.sh
       - run: docker compose -f ../frontend.yml -f ../build-front-end.yml config
+      - run: touch ../mongo/.env ../backend/.env && docker compose -f ../docker-compose.yml -f ../development.yml config
