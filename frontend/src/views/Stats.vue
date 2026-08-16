@@ -1,335 +1,96 @@
 <template>
-  <div class="container-fluid" v-if="stats">
-    <b-row class="justify-content-md-center">
-      <b-col class="col-md-6">
-        <h1>Statistiques</h1>
-        <p>
-          Statistiques descriptives des entrées wikipédia trouvées. 
-        </p>
-        <div class="container-fluid form">
-          <form>
-            <div class="row mb-2 list-item-form">
-              <label for="selecttdata" class="col-sm-2 col-form-label">Identifier&nbsp;:</label>
-              <div class="col-sm-10">
-                <b-form-select
-                  v-model="identifier"
-                  :options="identifierOptions"
-                  class="form-control form-control"
-                />
-              </div>
-            </div>
-          </form>
+  <section class="mx-auto" style="max-width: 950px">
+    <h1>Statistiques</h1>
+    <p>Statistiques descriptives des entrées Wikipédia trouvées.</p>
+    <div v-if="error" class="alert alert-danger">{{ error }}</div>
+    <div v-else-if="!stats" class="text-muted">Chargement…</div>
+
+    <template v-else>
+      <label class="mb-3">Identifiant
+        <select v-model="identifier" class="form-select">
+          <option v-for="id in identifiers" :key="id" :value="id">{{ id }}</option>
+        </select>
+      </label>
+
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center gap-3">
+          <strong>{{ identifier }} / Wikipédia</strong>
+          <select v-model="matchReportView" class="form-select form-select-sm" style="max-width: 16rem">
+            <option v-for="o in matchReportOptions" :key="o.value" :value="o.value">{{ o.text }}</option>
+          </select>
         </div>
-      </b-col>
-    </b-row>
-    <div>
-      
-      <div class="row justify-content-md-center" style="margin: 1rem;" @keyup.enter="searchData" v-on:submit.prevent>
-        <b-col sm="12" md="8" lg="6" xl="6" >
-          <div class="card">
-            <div class="card-header">
-              <div style="margin-bottom: 1rem;"><strong>{{identifier}} translations vs Wikipedia entries</strong></div>
-              <div class="container-fluid form">
-                <form>
-                  <div class="row mb-2 list-item-form">
-                    <label for="selecttdata" class="col-sm-2 col-form-label">See&nbsp;:</label>
-                    <div class="col-sm-10">
-                      <b-form-select
-                        v-model="matchReportView"
-                        :options="matchReportOptions"
-                        class="form-control"
-                      />
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
-            <div class="card-body">
-              <p>
-                
-                <div v-if="matchReportView != 'overall'">
-                  Among the {{identifier}} terms in <span class="number">{{langFromCode(matchReportView)}}</span>,
-                </div>
-                <div v-else>
-                  Among all languages of all {{identifier}} terms,
-                </div>
-                <br>
-                <span class="number" v-html="prettyN(stats.match_report[matchReportView].not_in_wiki || 0)" /> didn't have an associated wikipedia page, <br>
-                <span class="number" v-html="prettyN(stats.match_report[matchReportView].not_in_mesh || 0)" /> had a wikipedia page but no {{identifier}} translation in this language,<br>
-                <span class="number" v-html="prettyN(stats.match_report[matchReportView].no_match || 0)" /> had entries both in the {{identifier}} and in wikipedia, but nor the Preferred Term not the Synonyms corresponded to the wikipedia entry. <br>
-                
-                
-              </p>
-              <p>
-                For <span class="number" v-html="prettyN(stats.match_report[matchReportView].pt || 0)" /> {{identifier}} terms, the Preferred Term matched the wikipedia entry.<br>
-                For <span class="number" v-html="prettyN(stats.match_report[matchReportView].syn || 0)" /> {{identifier}} terms, one of the synonyms matched the wikipedia entry.
-              </p>
-              
-            </div>
-          </div>
-        </b-col>
-        
+        <div class="card-body">
+          <p v-if="matchReport">
+            <N :value="matchReport.not_in_wiki" /> sans page Wikipédia ·
+            <N :value="matchReport.not_in_mesh" /> sans traduction {{ identifier }} ·
+            <N :value="matchReport.no_match" /> sans correspondance PT/SYN.
+          </p>
+          <p v-if="matchReport">
+            <N :value="matchReport.pt" /> correspondances par terme préféré ·
+            <N :value="matchReport.syn" /> par synonyme.
+          </p>
+        </div>
       </div>
 
+      <p>
+        <N :value="stats.overall?.zero" /> / <N :value="stats.overall?.n" /> concepts
+        ({{ percent(stats.overall?.zero_frac) }}) n'ont pas de page Wikipédia associée.
+      </p>
+      <p>
+        Nombre moyen de traductions : <N :value="stats.overall?.mean" />
+        (ET = <N :value="stats.overall?.sd" />).
+      </p>
+      <p>Langues les plus fréquentes : {{ topLanguages.join(', ') }}.</p>
 
-      <!-- <pre>
-           {{JSON.stringify(stats.match_report, null, 2)}}
-           </pre> -->
-    </div>
-    <b-row class="justify-content-md-center">
-      <b-col sm="12" md="10" lg="8" xl="6" v-if="stats">
-        <p>
-          Among the searched {{identifier}} terms, <span class="number" v-html="prettyN(stats.overall.zero)" /> / <span class="number" v-html="prettyN(stats.overall.n)" /> (<span class="number" v-html="prettyN((stats.overall.zero_frac*100).toFixed(2)) + '%'" />) did not have a corresponding entry on Wikipedia.
-        </p>
-        <p>
-        On average there existed <span class="number" v-html="prettyN(stats.overall.mean.toFixed(0))" /> (DS = <span class="number" v-html="prettyN(stats.overall.sd.toFixed(0))" />) translations per concept found.
-        </p>
-        <p>
-          The most frequent languages are: <span class="number" v-for="e in top10lang">{{e}}</span>
-        </p>
-        <hr>
-        <p>
-          <span class="number" v-html="prettyN(stats.en.overall.n)" /> Documents were found thanks to an english {{identifier}} term (<span class="number" v-html="prettyN(stats.en.overall.mean.toFixed(0))" /> &#177; <span class="number" v-html="prettyN(stats.en.overall.sd.toFixed(0))" /> translation per {{identifier}} term),<br>
-        </p><p>
-          <span class="number" v-html="prettyN(stats.not_en.overall.n)" /> Documents were found thanks to a {{identifier}} term in another language than english (in the event where the english term did not return any Wikipedia entry) (<span class="number" v-html="prettyN(stats.not_en.overall.mean.toFixed(0))" /> &#177; <span class="number" v-html="prettyN(stats.not_en.overall.sd.toFixed(0))" /> translation per {{identifier}} term)<br>
-        </p>
-          <div style="display: flex; justify-content: center;">
-            
-            <!-- <table class="table table-sm table-bordered table-hover" style="font-family: monospace; width: auto !important;">
-                 <caption>Contingency table of the way the Wikipedia pages were found</caption>
-                 <thead>
-                 <tr>
-                 <th class="title" scope="col"></th>
-                 <th class="title" scope="col">English</th>
-                 <th class="title" scope="col">Other</th>
-                 <th class="title" scope="col"></th>
-                 </tr>
-                 </thead>
-                 <tbody>
-                 <tr>
-                 <th class="title" scope="row">Preferred Term</th>
-                 <td class='number'             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='pt' && kb=='en'))[1])"></td>
-                 <td class='number'             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='pt' && kb=='not_en'))[1])"></td>
-                 <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (ka=='pt')).map(e => e[1])))"></th>
-                 </tr>
-                 <tr>
-                 <th class="title" scope="row">Synonym</th>
-                 <td class="number"             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='syn' && kb=='en'))[1])"></td>
-                 <td class="number"             v-html="prettyN(stats.contingency.find(([[ka, kb], e]) => (ka=='syn' && kb=='not_en'))[1])"></td>
-                 <th class="number" scope="row" v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (ka=='syn')).map(e => e[1])))"></th>
-                 </tr>
-                 <tr>
-                 <th class="title" scope="row"></th>
-                 <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (kb=='en')).map(e => e[1])))"></th>
-                 <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.filter(([[ka, kb], e]) => (kb=='not_en')).map(e => e[1])))"></th>
-                 <th class='number' scope='row' v-html="prettyN(sum(stats.contingency.map(e => e[1])))"></th>
-                 </tr>
-                 </tbody>
-                 </table> -->
-          </div>
-      </b-col>
-    </b-row>
+      <label class="mb-4">Données des graphiques
+        <select v-model="plotData" class="form-select">
+          <option :value="null">Tout</option><option value="en">Anglais</option><option value="not_en">Hors anglais</option>
+          <option value="pt">Terme préféré</option><option value="syn">Synonyme</option>
+        </select>
+      </label>
 
-    <div class="row justify-content-md-center" style="margin: 1rem;" @keyup.enter="searchData" v-on:submit.prevent>
-      <b-col sm="12" md="8" lg="6" xl="4" >
-        <div class="container-fluid form">
-          <form>
-            <div class="row mb-2 list-item-form">
-              <label for="selecttdata" class="col-sm-3 col-form-label">Plot Data&nbsp;:</label>
-              <div class="col-sm-9">
-                <b-form-select
-                  id="selecttdata"
-                  v-model="plotData"
-                  :options="plotDataOptions"
-                  class="form-control"
-                />
-              </div>
-            </div>
-          </form>
-        </div>
-      </b-col>
-    </div>
-            
-    <b-row class="justify-content-md-center">
-      <b-col sm="12" md="10" lg="8" xl="6" v-if="stats">
-        <div class="plot">
-          <Barplot
-            title="Repartition of the number of translations per term"
-            xtitle="Number of translations"
-            ytitle="Number of terms"
-            :xdata="statsplotdata.n_trads.map(e => e[0].toFixed(0))"
-            :ydata="statsplotdata.n_trads.map(e => e[1])"
-          />
-        </div>
-        <!-- </b-col>
-             <b-col sm="12" md="10" lg="8" xl="6" v-if="stats"> -->
-        <div class="plot">
-          <Barplot
-            title="Repartition of the number of wikipedia entries per language"
-            xtitle="language"
-            ytitle="Number of Wikipedia entries"
-            :xdata="statsplotdata.langs.map(e => e[0])"
-            :ydata="statsplotdata.langs.map(e => e[1])"
-          />
-        </div>
-      </b-col>
-    </b-row>
-
-  </div>
+      <Barplot v-if="translationsChart.length" class="mb-5"
+        title="Nombre de traductions par terme" xtitle="Traductions" ytitle="Termes"
+        :xdata="translationsChart.map(e => e[0])" :ydata="translationsChart.map(e => e[1])" />
+      <Barplot v-if="languageChart.length"
+        title="Entrées Wikipédia par langue" xtitle="Langue" ytitle="Entrées"
+        :xdata="languageChart.map(e => langFromCode(e[0]))" :ydata="languageChart.map(e => e[1])" />
+    </template>
+  </section>
 </template>
 
-<script lang="ts">
-// import { Component, Vue, Watch } from "vue-property-decorator";
-import { Component, Mixins, Prop } from "vue-property-decorator";
-import axios from "axios";
-import _ from 'lodash';
+<script setup lang="ts">
+import { computed, defineComponent, h, onMounted, ref, watch } from "vue";
 import Barplot from "@/components/Barplot.vue";
-import Boxplot from "@/components/Boxplot.vue";
+import { getJson } from "@/api";
 import { langCodes } from "@/langCodes.js";
-import MathMixins from "@/MathMixins";
 
+type Pair = [string, number];
+const allStats = ref<Record<string, any>>({}), identifiers = ref<string[]>([]), identifier = ref("");
+const matchReportView = ref("overall"), plotData = ref<string | null>(null), error = ref("");
+const stats = computed(() => allStats.value[identifier.value]);
+const plotStats = computed(() => plotData.value ? stats.value?.[plotData.value] : stats.value);
+const langFromCode = (code: string) => langCodes.find((e: { code: string }) => e.code === code)?.name || code;
+const matchReportOptions = computed(() => Object.keys(stats.value?.match_report || {}).sort((a, b) => a === "overall" ? -1 : langFromCode(a).localeCompare(langFromCode(b))).map(value => ({ value, text: value === "overall" ? "Toutes les langues" : langFromCode(value) })));
+const matchReport = computed(() => stats.value?.match_report?.[matchReportView.value]);
+const topLanguages = computed(() => (stats.value?.langs || []).slice(0, 10).map((e: Pair) => langFromCode(e[0])));
+const translationsChart = computed<Pair[]>(() => plotStats.value?.n_trads || []);
+const languageChart = computed<Pair[]>(() => plotStats.value?.langs || []);
+const percent = (value = 0) => `${(100 * value).toFixed(2)} %`;
+const format = (value: unknown) => Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
+const N = defineComponent({ props: { value: { required: false } }, setup: p => () => h("span", { class: "number" }, format(p.value)) });
 
-@Component({
-  components: {
-    Barplot,
-    Boxplot
-  },
-  mixins: [MathMixins]
-})
-export default class Stats extends Mixins(MathMixins) { 
-  allStats: any = null;
-  plotData: string | null = null;
-  
-  plotDataOptions = [
-    {
-      text: "All",
-      value: null
-    },
-    {
-      text: "English",
-      value: "en"
-    },
-    {
-      text: "Everything except english",
-      value: "not_en"
-    },
-    {
-      text: "Preferred Term",
-      value: "pt"
-    },
-    {
-      text: "Synonym",
-      value: "syn"
-    },
-  ]
-  
-  matchReportView = "overall"
-  get matchReportOptions(){
-    return [{text: "All", value: "overall"}].concat(_.sortBy(Object.keys(this.stats.match_report).filter(e => e != "overall").map(e => {
-      return {
-        text: this.langFromCode(e),
-        value: e,
-      }
-    }), [e => e.text.toLowerCase()]))
-  }
-
-  identifier: null | string = null;
-  identifiers: string[] = [];
-  
-  get stats(){
-    if(this.allStats && this.identifier){
-      return this.allStats[this.identifier]
-    }else{
-      return null;
-    }
-  }
-  
-  get identifierOptions(){
-    return this.identifiers.map(e => {
-      return {
-        text: e,
-        value: e
-      }
-    })
-  }
-
-  fetchIdentifiers(){
-    axios.get('api/identifiers').then(e => {
-      this.identifiers = e.data;
-      console.log(this.identifiers)
-      this.identifier = this.identifiers[0];
-    }).catch(console.log)
-  }
-  
-
-  get statsplotdata(){
-    return this.plotData == null ? this.stats : this.stats[this.plotData];
-  }
-  
-  font: any = {
-    family: 'Source Code Pro',
-    color: "#000",
-  }
-  
-  sum(l){
-    return !l?0:l.length==1?l[0]:l.reduce((a, b) => a+b)
-  }
-  
-  get top10lang(){
-    return this.stats.langs.slice(0, 10).map(e => e[0] ).map(e => {
-      const code = langCodes.find(ee => ee.code==e)
-      return code?code.name:e
-    })
-  }
-  prettyN(n) {
-    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "&nbsp;");
-  }
-  
-  fetchData(){
-    axios
-    .get("/api/mesh-stats")
-    .then(ans => {
-      console.log('stats');
-      console.log(ans.data);
-      this.allStats = ans.data
-    })
-    .catch(console.log);
-  }
-  mounted() {
-    this.fetchIdentifiers();
-    this.fetchData();
-  }
-}
+watch(identifier, () => { matchReportView.value = "overall"; plotData.value = null; });
+onMounted(async () => {
+  try {
+    [identifiers.value, allStats.value] = await Promise.all([
+      getJson<string[]>("api/identifiers"), getJson<Record<string, any>>("api/mesh-stats"),
+    ]);
+    identifier.value = identifiers.value[0] || Object.keys(allStats.value)[0] || "";
+  } catch (e) { error.value = e instanceof Error ? e.message : "Statistiques indisponibles"; }
+});
 </script>
 
 <style scoped>
-.row{
-  margin-bottom: 2rem;
-}
-
-span.number{
-  font-family: monospace;
-  background-color: #ddd !important;
-  padding: 0.175rem 0.375rem;
-  font-size: 0.9rem;
-  margin: 0 0.1rem;
-  border-radius: 0.175rem;
-  display: inline-block;
-}
-
-div.plot{
-  margin-bottom: 2rem;
-}
-
-th.number, td.number{
-  text-align: right;
-  padding: 0.75rem;
-}
-
-th.title, td.title{
-  text-align: right;
-  padding: 0.75rem;
-}
-
-
+.number { font-family: monospace; background: #ddd; padding: .15rem .35rem; border-radius: .2rem; }
 </style>

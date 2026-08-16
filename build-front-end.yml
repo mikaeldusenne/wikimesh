@@ -1,4 +1,3 @@
-version: '3'
 services:
-  vuecli:
-    command: npm run build
+  frontend:
+    command: sh -c "npm ci && npm run build"

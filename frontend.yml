@@ -1,18 +1,17 @@
-version: '3'
 services:
-  vuecli:
-    image: "wikimesh-vue2"
-    networks:
-      - "wikimesh_network"
-    build:
-      context: "./frontend"
+  frontend:
+    image: wikimesh-vite
+    networks: [wikimesh_network]
+    build: { context: "./frontend" }
     volumes:
       - "./frontend:/home/node"
-    ports:
-      - "8055:8080"
-    command: "npm run serve"
+      - "frontend_node_modules:/home/node/node_modules"
+    ports: ["8055:5173"]
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
 
-  
 networks:
   wikimesh_network:
     driver: bridge
+
+volumes:
+  frontend_node_modules:

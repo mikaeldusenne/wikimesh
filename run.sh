@@ -1,7 +1,7 @@
 #!/bin/sh
 
-CMD="$1"
-shift
+CMD="${1:-}"
+[ "$#" -eq 0 ] || shift
 
 case "$CMD" in
     ""|prod*)
@@ -19,11 +19,11 @@ case "$CMD" in
     update-frontend)
         docker-compose -f frontend.yml -f update_frontend.yml up --build --abort-on-container-exit $@
         ;;
-	build*)
+    build*)
         docker-compose -f frontend.yml -f build-front-end.yml up --abort-on-container-exit $@
         ;;
-    lint*)
-        docker exec -it wikimesh_vuecli_1 npm run lint
+    test*|lint*)
+        docker-compose -f frontend.yml run --rm frontend npm run check
         ;;
     dump-db)
         docker exec -it wikimesh_mongo_docker sh -c "mongodump --username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD --db thedb --out /dumps/dump_$(date +'%Y-%m-%d_%H-%M-%S')"
