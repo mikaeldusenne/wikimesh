@@ -49,12 +49,6 @@ case "$CMD" in
         python -m venv venv && . ./venv/bin/activate \
             && pip install -r backend/requirements.txt \
             ;;
-    init)
-        docker-compose -f docker-compose.yml -f frontend.yml build --no-cache && \
-            ./run.sh update && \
-            ./run.sh build --build && \
-            ./run.sh 
-        ;;
     stop)
         docker-compose down
         ;;

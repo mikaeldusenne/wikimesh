@@ -4,6 +4,10 @@ Detection of wikipedia pages in different languages for MeSH concepts
 
 https://mikaeldusenne.com/wikimesh/
 
+## Initialization
+
+`./run.sh init` performs the project initialization that is actually supported by the helper script: it runs `./init_secrets.sh`, then builds and runs the `frontend.yml` + `init_frontend.yml` Compose stack to initialize frontend dependencies. It does not start the normal development or production stack.
+
 ## Backend dependency updates
 
 The backend runtime is pinned in `backend/Dockerfile` and CI. Direct dependencies live in `backend/requirements.txt`; deployments install `backend/requirements.lock`.
