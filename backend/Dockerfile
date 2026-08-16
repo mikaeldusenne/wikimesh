@@ -1,14 +1,7 @@
-from python:3.9.0
+FROM python:3.14.6-slim-bookworm
 
-RUN apt-get update && apt-get upgrade -y
-
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-RUN pip install --upgrade pip
-COPY requirements.txt ./requirements.txt
-RUN pip install -r requirements.txt
-
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 
-
+COPY requirements.lock .
+RUN pip install --no-cache-dir -r requirements.lock
