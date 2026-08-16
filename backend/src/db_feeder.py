@@ -90,6 +90,8 @@ def query_langs(mesh):
 # identifier = "EFMI"
 # identifier = "MeSH"
 def run(identifier="MeSH", force=False):
+    # Imports stay side-effect free; CLI/programmatic runs connect when needed.
+    db.connect()
     agg_match_identifier = {'identifier': identifier}
     
     if not force:
@@ -154,7 +156,6 @@ def run(identifier="MeSH", force=False):
     pool.close()
     pool.join()
     
-
 def test():
     reload(h)
     # ftc.query_wiki_langs("anticorps", "fr")

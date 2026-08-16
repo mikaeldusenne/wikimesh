@@ -21,6 +21,7 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--identifier')
     parser.add_argument('path', help='path to file')
     args = parser.parse_args()
+    db.connect()
 
     print(args)
     # db.client
@@ -55,9 +56,9 @@ if __name__ == "__main__":
             if i % 100 == 0:
                 h.show_progress(i)
 
+    print(db.db.mesh.count_documents({}))
+
 # V.decode(db.db.mesh.find_one())
-print(db.db.mesh.count_documents({}))
-1        
 
 # f = open(filepath, encoding="utf-8")
 
