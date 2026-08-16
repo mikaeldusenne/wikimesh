@@ -70,8 +70,26 @@ flsk = Blueprint(
     static_folder='./backend/static',
 )
 
+
+def _int_arg(name, default, minimum=0, maximum=None):
+    try:
+        value = int(request.args.get(name, default))
+    except (TypeError, ValueError):
+        raise ValueError(f"{name} must be an integer") from None
+    if value < minimum or maximum is not None and value > maximum:
+        raise ValueError(f"{name} must be between {minimum} and {maximum if maximum is not None else '∞'}")
+    return value
+
+
+def _choice_arg(name, default, choices):
+    value = request.args.get(name, default)
+    if value not in choices:
+        raise ValueError(f"{name} must be one of {', '.join(choices)}")
+    return value
+
+
 @cache.memoize()
-def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, langFilter, langMesh, langMeshType, langWiki, identifier=None):
+def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, langFilter, langMesh, langWiki, identifier=None):
     aggmatch = {}
     
     if identifier is not None:
@@ -141,50 +159,43 @@ def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, 
     return {"count": n_documents, "data": ans}
     
 
-@flsk.route("/api/clear-cache", methods=["GET"])
-def clear_cache():
-    cache.clear()
-    return "ok", 200
-
-
 @flsk.route("/api/mesh", methods=["GET"])
 def get_mesh():
-    args = dict(
-        filter_non_empty=request.args.get('filterOnlyNonEmpty', "false") == "true",
-        start=int(request.args.get('from', 0)),
-        n=int(request.args.get('limit', 10)),
-        
-        search=request.args.get('search', ""),
-        langMatchFilter=request.args.get('langMatchSearch'),
-        ptsynfilter=request.args.get('ptsynMatchSearch'),
-        
-        langFilter=request.args.get('langSearch'),
-        langMesh=request.args.get('langMesh'),
-        langMeshType=request.args.get('langMeshType'),
-        langWiki=request.args.get('langWiki'),
-        
-        identifier=request.args.get('identifier'),
-    )
-    print("**************************")
-    pprint(args)
-    print("**************************")
+    try:
+        args = dict(
+            filter_non_empty=request.args.get('filterOnlyNonEmpty', "false") == "true",
+            start=_int_arg('from', 0),
+            n=_int_arg('limit', 10, 1, 100),
+            
+            search=request.args.get('search', "").strip()[:75],
+            langMatchFilter=request.args.get('langMatchSearch'),
+            ptsynfilter=request.args.get('ptsynMatchSearch'),
+            
+            langFilter=request.args.get('langSearch'),
+            langMesh=_choice_arg('langMesh', 'all', ('yes', 'no', 'all')),
+            langWiki=_choice_arg('langWiki', 'all', ('yes', 'no', 'all')),
+            
+            identifier=request.args.get('identifier'),
+        )
+    except ValueError as error:
+        return jsonify(error=str(error)), 400
     return jsonify(_get_mesh(**args))
 
     
-@cache.cached()
 @flsk.route("/api/languages", methods=["GET"])
+@cache.cached()
 def get_languages():
     return jsonify([e for e in list(db.db.wikimesh.find({}, {'_id': 0, 'lang_match': 1}).distinct("lang_match"))if e is not None])
 
 
-@cache.cached()
 @flsk.route("/api/identifiers", methods=["GET"])
+@cache.cached()
 def get_identifiers():
     return jsonify(db.db.mesh.distinct("identifier"))
 
 
-@cache.memoize()
 @flsk.route('/api/mesh-stats')
+@cache.cached()
 def mesh_stats():
     return jsonify(db_exporter.mesh_stats())
 
