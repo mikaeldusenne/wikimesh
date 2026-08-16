@@ -2,3 +2,4 @@ version: '3'
 services:
   vuecli:
     command: "npm update --save"
+    # command: "sleep 999999"

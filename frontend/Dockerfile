@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:20
 
 RUN apt-get -y update && apt-get -y upgrade && apt-get install -y nano
 

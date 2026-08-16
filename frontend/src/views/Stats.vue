@@ -1,8 +1,11 @@
 <template>
-  <div class="container-fluid" v-if="stats">
+  <div class="container-fluid" v-if="!stats">
+    chargement...
+  </div>
+  <div class="container-fluid" v-else>
     <b-row class="justify-content-md-center">
       <b-col class="col-md-6">
-        <h1>Statistics</h1>
+          <h1>Statistics</h1>
         <p>
           Descriptive stats of the wikipedia entries found. 
         </p>

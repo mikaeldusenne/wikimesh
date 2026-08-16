@@ -1,4 +1,4 @@
-FROM mongo:bionic
+FROM mongo:7
 
 
 RUN apt-get update && \

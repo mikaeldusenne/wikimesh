@@ -242,7 +242,8 @@ def health_check():
 def index(path):
     return render_template('index.html')
 
-root_url = os.path.join('/', "wikimesh")
+# root_url = os.path.join('/', "wikimesh")
+root_url = '/'
 static_url_path = os.path.join(root_url, "static")
 
 app = Flask(__name__, static_url_path=static_url_path)

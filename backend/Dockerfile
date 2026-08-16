@@ -1,4 +1,4 @@
-from python:3.9.0
+from python:3.12.0
 
 RUN apt-get update && apt-get upgrade -y
 

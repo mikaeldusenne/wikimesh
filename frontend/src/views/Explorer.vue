@@ -188,7 +188,7 @@
               {{m.langs[0].pt}}
               <span><em style="font-size:0.9rem; color: #ddd;">{{m.wikilangs.langs.length}}&nbsp;languages.</em></span>
             </div>
-            <span class="show-details" @click="toggleDetails(m)" style="position: absolute; right: 1rem;" data-toggle="tooltip" data-placement="top" :title="(m.showDetails?'hide':'show') + ' MeSH concept details'"><font-awesome-icon :icon="m.showDetails?'eye-slash':'eye'" /></span>
+            <!-- <span class="show-details" @click="toggleDetails(m)" style="position: absolute; right: 1rem;" data-toggle="tooltip" data-placement="top" :title="(m.showDetails?'hide':'show') + ' MeSH concept details'"><font-awesome-icon :icon="m.showDetails?'eye-slash':'eye'" /></span> -->
           </b-card-title>
           
           <b-card-body class="item-card-body">
@@ -279,7 +279,7 @@ export default class Explorer extends Vue {
   nMesh = 0;
   perPage = 10;
   currentPage = 1;
-  filterOnlyNonEmpty = true;
+  filterOnlyNonEmpty = false;
   error = null;
   fetching = false;
   showAdvancedSearch = false;
@@ -476,6 +476,10 @@ export default class Explorer extends Vue {
   fetchIdentifiers(){
     axios.get('api/identifiers').then(e => {
       this.identifiers = e.data;
+      if(!this.identifier){
+        this.identifier = this.identifiers.slice(-1)[0];
+        this.searchData();
+      }
       console.log(this.identifiers)
     }).catch(console.log)
   }
@@ -496,19 +500,23 @@ export default class Explorer extends Vue {
     }
   }
   
+  async fetchall(){
+    this.fetchLanguages();
+    this.fetchIdentifiers();
+    
+    this.fetchData();
+  }
   
   mounted() {
     this.search = (this.$route.query.search as string) || "";
-    this.identifier = (this.$route.query.search as string) || "";
+    this.identifier = (this.$route.query.identifier as string) || "";
 
     this.showAdvancedSearch = this.tryParseLocalStorage("showAdvancedSearch") || this.showAdvancedSearch
     this.ptsynMatchSearch = this.tryParseLocalStorage("ptsynMatchSearch") || this.ptsynMatchSearch
     this.langMatchSearch = this.tryParseLocalStorage("langMatchSearch") || this.langMatchSearch
     
     console.log(this.$route)
-    this.fetchData();
-    this.fetchLanguages();
-    this.fetchIdentifiers();
+    this.fetchall();
   }
 
 }

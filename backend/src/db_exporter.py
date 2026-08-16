@@ -198,9 +198,12 @@ def report_match_mesh_wiki(identifier):
         for lang, match in e.items():
             setPath(acc, join(lang, match), lambda ee: (ee or 0)+1)
         return acc
-    
+
     summary = reduce(combine, l, {})
-    summary['overall'] = reduce(sumdicts, summary.values())
+    print(summary.keys())
+    if len(l)>0:
+        pprint(l[0])
+        summary['overall'] = reduce(sumdicts, summary.values())
     # summary['overall']
     return summary
 

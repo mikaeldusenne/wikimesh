@@ -1,7 +1,7 @@
 version: '3'
 services:
   mongo:
-    image: mongo:bionic
+    image: mongo:7
     networks:
       - wikimesh_network
     container_name: "wikimesh_mongo_docker"

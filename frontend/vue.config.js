@@ -1,5 +1,5 @@
 module.exports = {
-    publicPath:  (e => e.startsWith('/')?e:'/'+e)('wikimesh'),
+    // publicPath:  (e => e.startsWith('/')?e:'/'+e)('wikimesh'),
     assetsDir: "./static",
     outputDir: "./dist/",
     devServer: {
