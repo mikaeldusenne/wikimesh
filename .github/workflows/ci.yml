@@ -17,3 +17,22 @@ jobs:
       - run: docker build -t wikimesh-backend:test backend
       - run: docker pull redis:8.8.1-alpine
       - run: docker pull nginx:1.30.4
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.19.0"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: docker build -t wikimesh-frontend:test .
+      - run: sh -n ../run.sh
+      - run: docker compose -f ../frontend.yml -f ../build-front-end.yml config

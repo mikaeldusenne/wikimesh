@@ -1,4 +1,3 @@
-version: '3'
 services:
-  vuecli:
-    command: "npm update --save"
+  frontend:
+    command: npm install

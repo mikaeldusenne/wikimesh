@@ -1,672 +1,215 @@
 <template>
-  <div class="container-fluid" id="explorer">
-    <b-row class="justify-content-md-center">
-      <b-col class="col-md-6" id="explorer-intro">
-        <h1>Explorer</h1>
-        <p>
-          Cette section permet d'explorer les liens wikipédia retrouvés pour les concepts MeSH.
-        </p>
-        <p>
-          Survolez les concepts pour voir quel terme MeSH d'un concept a permis de retrouver les articles wikipédia.
-        </p>
-        <p>
-          Les pilules <span class="pill pill-syn-pt">PT</span> et <span class="pill pill-syn-pt">SYN</span> indiquent si la page wikipédia a été trouvée grâce à un terme préféré MeSH ou à un synonyme.
-        </p>
-      </b-col>
-    </b-row>
-    
-    <div class="row justify-content-md-center" style="margin: 1rem;" @keyup.enter="searchData" v-on:submit.prevent>
-      <b-col sm="12" md="8" lg="6" xl="6" >
-        <div class="container-fluid form">
-          <transition-group name="list-form" tag="form">
+  <section id="explorer" class="mx-auto" style="max-width: 950px">
+    <h1>Explorer</h1>
+    <p>Explore les pages Wikipédia retrouvées pour les concepts MeSH. PT = terme préféré, SYN = synonyme.</p>
 
-            <div key="A" class="row-mb-2 form-check list-item-form">
-              <div class="input-group" style="padding: 0.5rem 0.375rem;">
-                <label>
-                  <input type="checkbox" class="form-check-input"  v-model="filterOnlyNonEmpty" />
-                  Hide empty entries
-                </label>
-              </div>
-            </div>
-            
-            <div key="B" class="row mb-2 list-item-form">
-              <div class="input-group">
-                <input
-                  id="searchform"
-                  type="text"
-                  maxlength="75"
-                  class="form-control"
-                  placeholder="search by term or MeSH ID"
-                  v-model="search"
-                />
-                <div class="input-group-append">
-                  <button
-                    @click="searchData"
-                    class="btn btn-outline-secondary"
-                    type="button"
-                  >
-                    rechercher
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div key="CAA"
-                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Language of the concept that allowed to find the Wikipedia entries">
-              <label for="lang-match-search" class="col-sm-2 col-form-label">Identifier&nbsp;:</label>
-              <div class="col-sm-10">
-                <b-form-select
-                  v-model="identifier"
-                  :options="identifierOptions"
-                  @change="searchData"
-                  class="form-control form-control"
-                />
-              </div>
-            </div>
-            
-            <div key="C" v-if="showAdvancedSearch"
-                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Language of the concept that allowed to find the Wikipedia entries">
-              <hr>
-              <div><strong>Match type:</strong></div>
-              <label for="lang-match-search" class="col-sm-2 col-form-label">Language&nbsp;:</label>
-              <div class="col-sm-10">
-                <b-form-select
-                  id="lang-match-search"
-                  v-model="langMatchSearch"
-                  :options="langMatchOptions"
-                  @change="searchData"
-                  class="form-control form-control"
-                />
-              </div>
-            </div>
-            
-            <div key="D" v-if="showAdvancedSearch"
-                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Filtrer les match par PT / SYN">
-              <label for="ptsyn-match-search" class="col-sm-2 col-form-label">Type&nbsp;:</label>
-              <div class="col-sm-10">
-                <b-form-select
-                  id="ptsyn-match-search"
-                  v-model="ptsynMatchSearch"
-                  :options="ptsynMatchOptions"
-                  @change="searchData"
-                  class="form-control form-control"
-                />
-              </div>
-            </div>
-            
-            
-            <div key="CA" v-if="showAdvancedSearch"
-                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="">
-              <hr>
-              <div>
-                <strong>Filter results:</strong>
-                <p><em>Filter the res</em></p>
-              </div>
-              <label for="lang-match-search" class="col-sm-4 col-form-label">Language:</label>
-              <div class="col-sm-8">
-                <b-form-select
-                  v-model="langSearch"
-                  :options="langMatchOptions"
-                  @change="searchData"
-                  class="form-control form-control"
-                />
-              </div>
-            </div>
-            <div key="CB" v-if="showAdvancedSearch" class="row mb-2 list-item-form">
-              <label for="lang-match-search" class="col-sm-4 col-form-label">MeSH:</label>
-              <div class="col-sm-8" style="display: inline-grid; grid-template-columns: 33% 33% 33%">
-                <div class="form-check" style="display: inline;" v-for="yna in ['yes', 'no', 'all']">
-                  <input class="form-check-input" @change="searchData"
-                         :id="'langmesh-'+yna" type="radio" name="langMesh" :value="yna" v-model="langMesh">
-                  <label class="form-check-label" :for="'langmesh-'+yna" >{{yna}}</label>
-                </div>
-              </div>
-            </div>
-            <div key="CD" v-if="showAdvancedSearch" class="row mb-2 list-item-form">
-              <label for="lang-match-search" class="col-sm-4 col-form-label">Wikipedia:</label>
-              <div class="col-sm-8" style="display: inline-grid; grid-template-columns: 33% 33% 33%">
-                <div class="form-check form-check-inline" v-for="yna in ['yes', 'no', 'all']">
-                  <input class="form-check-input" @change="searchData"
-                         :id="'langwiki-'+yna" type="radio" name="langWiki" :value="yna" v-model="langWiki">
-                  <label class="form-check-label" :for="'langwiki-'+yna" >{{yna}}</label>
-                </div>
-              </div>
-            </div>
-            <!-- <div key="CC" v-if="showAdvancedSearch && langMesh!='no' && langWiki!='no'" class="row mb-2 list-item-form">
-                 <label for="lang-match-search" class="col-sm-4 col-form-label">MeSH/Wiki match:</label>
-                 <div class="col-sm-8" style="display: inline-grid; grid-template-columns: 25% 25% 25% 25%">
-                 <div class="form-check form-check-inline" v-for="yna in ['pt', 'syn', 'none', 'all']">
-                 <input class="form-check-input" @change="searchData"
-                 :id="'langmeshtype-'+yna" type="radio"
-                 name="langMeshType" :value="yna" v-model="langMeshType">
-                 <label class="form-check-label" :for="'langmeshtype-'+yna" >{{yna}}</label>
-                 </div>
-                 </div>
-                 </div> -->
-            
-              
-            <hr key="Z" v-if="showAdvancedSearch"/>
-            <div key="E" v-if="showAdvancedSearch"
-                 class="row mb-2 list-item-form" data-toggle="tooltip" data-placement="top" title="Limiter la isualisation des liens à certaines langues">
-              <label for="langview" class="col-sm-3 col-form-label">View&nbsp;only&nbsp;:</label>
-              <div class="col-sm-9">
-                <b-form-select
-                  id="langview"
-                  v-model="langView"
-                  :options="langViewOptions"
-                  class="form-control form-control"
-                />
-              </div>
-            </div>
+    <form class="card card-body mb-4" @submit.prevent="searchData">
+      <label class="form-check mb-3">
+        <input v-model="filterOnlyNonEmpty" class="form-check-input" type="checkbox" />
+        <span class="form-check-label">Masquer les entrées vides</span>
+      </label>
 
-            <div key="F" class="list-item-form" style="margin-top: 1rem;">
-              <em v-if="!fetching">{{nMesh}} document{{nMesh>1?'s':''}}.</em>
-              <em v-else>recherche...</em>
-              <div style="float: right;">
-                <em style="color: #555; text-decoration: underline; cursor: pointer;"
-                    @click="toggleAdvancedSearch">
-                  {{showAdvancedSearch?"normal search":"advanced search"}}
-                </em>
-              </div>
-            </div>
-            
-            
-          </transition-group>
+      <div class="input-group mb-3">
+        <input v-model="search" class="form-control" maxlength="75" placeholder="terme ou identifiant MeSH" />
+        <button class="btn btn-outline-secondary">Rechercher</button>
+      </div>
 
+      <label class="mb-3">Identifiant
+        <select v-model="identifier" class="form-select" @change="searchData">
+          <option :value="null">Tous</option>
+          <option v-for="value in identifiers" :key="value" :value="value">{{ value }}</option>
+        </select>
+      </label>
+
+      <template v-if="showAdvancedSearch">
+        <div class="row g-3">
+          <label class="col-md-6">Langue du match
+            <select v-model="langMatchSearch" class="form-select" @change="searchData">
+              <option v-for="o in languageOptions" :key="String(o.value)" :value="o.value">{{ o.text }}</option>
+            </select>
+          </label>
+          <label class="col-md-6">Type de match
+            <select v-model="ptsynMatchSearch" class="form-select" @change="searchData">
+              <option :value="null">PT + SYN</option><option value="pt">PT</option><option value="syn">SYN</option>
+            </select>
+          </label>
+          <label class="col-md-6">Filtrer par langue
+            <select v-model="langSearch" class="form-select" @change="searchData">
+              <option v-for="o in languageOptions" :key="String(o.value)" :value="o.value">{{ o.text }}</option>
+            </select>
+          </label>
+          <label class="col-md-6">Afficher les liens
+            <select v-model="langView" class="form-select">
+              <option v-for="o in viewLanguageOptions" :key="String(o.value)" :value="o.value">{{ o.text }}</option>
+            </select>
+          </label>
         </div>
-      </b-col>
+        <div v-if="langSearch" class="row mt-3">
+          <fieldset v-for="[label, model] in [['MeSH', 'mesh'], ['Wikipedia', 'wiki']]" :key="model" class="col-md-6">
+            <legend class="fs-6">{{ label }}</legend>
+            <label v-for="value in ['yes', 'no', 'all']" :key="value" class="me-3">
+              <input v-if="model === 'mesh'" v-model="langMesh" type="radio" :value="value" @change="searchData" />
+              <input v-else v-model="langWiki" type="radio" :value="value" @change="searchData" />
+              {{ value }}
+            </label>
+          </fieldset>
+        </div>
+      </template>
+
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <small>{{ fetching ? 'Recherche…' : `${nMesh} résultat${nMesh === 1 ? '' : 's'}` }}</small>
+        <button type="button" class="btn btn-link btn-sm" @click="toggleAdvancedSearch">
+          {{ showAdvancedSearch ? 'Recherche simple' : 'Recherche avancée' }}
+        </button>
+      </div>
+    </form>
+
+    <div v-if="metadataError" class="alert alert-warning">
+      {{ metadataError }} <button class="btn btn-sm btn-outline-secondary" @click="fetchMetadata">Réessayer</button>
     </div>
-    
-    
-    <b-row v-if="!error" class="justify-content-md-center" :class="{fetching: fetching}">
-      <b-col sm="12" md="10" lg="8" xl="6">
-        <b-card v-for="m in mesh" :key="m.id">
-          <b-card-title style="display: flex; align-items: center;" class="item-title">
-            <div class="pill id">{{m._id}}</div>
-            <div class="pill pill-syn-pt" v-if="m.wikilangs.origin">
-              {{m.wikilangs.origin.toUpperCase()}}
+    <div v-if="error" class="alert alert-danger">{{ error }}</div>
+    <div v-else-if="!fetching && !mesh.length" class="alert alert-secondary">Aucun résultat.</div>
+
+    <div :class="{ fetching }">
+      <article v-for="m in mesh" :key="m._id" class="card mb-3">
+        <header class="card-header d-flex align-items-center gap-2 flex-wrap">
+          <span class="badge text-bg-secondary">{{ m._id }}</span>
+          <span v-if="m.wikilangs.origin" class="badge text-bg-success">{{ m.wikilangs.origin.toUpperCase() }}</span>
+          <strong :title="matchInfo(m)">{{ m.langs[0]?.pt || m._id }}</strong>
+          <small class="text-muted">{{ wikiEntries(m).length }} langues</small>
+          <button class="btn btn-sm btn-outline-secondary ms-auto" @click="m.showDetails = !m.showDetails">
+            {{ m.showDetails ? 'Masquer' : 'Détails' }}
+          </button>
+        </header>
+        <div class="card-body row g-3">
+          <div v-if="m.showDetails" class="col-md-6 scrollbox">
+            <strong>Détails du concept</strong>
+            <div v-for="lang in m.langs" :key="lang._id" class="mt-2">
+              <strong>{{ langFromCode(lang._id) }}:</strong> {{ lang.pt }}
+              <small v-if="lang.syns?.length" class="d-block text-muted">Synonymes : {{ lang.syns.join(', ') }}</small>
             </div>
-            <div class="meshterm" data-toggle="tooltip" data-placement="top" :title="matchInfo(m)">
-              {{m.langs[0].pt}}
-              <span><em style="font-size:0.9rem; color: #ddd;">{{m.wikilangs.langs.length}}&nbsp;languages.</em></span>
-            </div>
-            <span class="show-details" @click="toggleDetails(m)" style="position: absolute; right: 1rem;" data-toggle="tooltip" data-placement="top" :title="(m.showDetails?'hide':'show') + ' MeSH concept details'"><font-awesome-icon :icon="m.showDetails?'eye-slash':'eye'" /></span>
-          </b-card-title>
-          
-          <b-card-body class="item-card-body">
-            <b-container class="container-item">
-              <!-- <b-row>
-              -->
-              <transition-group name="list" tag="div" class="row row-item">
-                
-                <b-col key="colMesh" class="conceptdetails list-item" lg="6" v-if="m.showDetails" style="margin-bottom: 1rem; max-height: 15rem; height: 15rem; overflow: auto;">
-                    <p style="margin-bottom: 0.5rem;"><strong style="width: 100%;">Concept details:</strong></p>
-                    <p><strong>id:&nbsp;</strong>{{m._id}}</p>
-                    <div v-for="e in m.langs" :key="e._id">
-                      <hr style="margin: 0.25rem;" />
-                      <strong>{{langFromCode(e._id)}}:&nbsp;</strong> {{e.pt}}
-                      <div v-if="e.syns.length">
-                        <em>synonyms:&nbsp;</em>
-                        <ul style="margin-bottom: 0;"><li v-for="s in e.syns">-&nbsp;{{s}}</li></ul>
-                      </div>
-                    </div>
-                  </b-col>
-                  
-                  <b-col key="colWikipedia" lg="6" class="linksdetails list-item" v-if="m.wikilangs.langs.length" style="margin-bottom: 1rem; max-height: 15rem; height: 15rem; overflow: auto;">
-                    <strong style="width: 100%;" v-if="m.showDetails">Liens:</strong>
-                    <div style="display: block;">
-                      <ul>
-                        <li v-for="[lang, l] in filterWiki(m.wikilangs.langs)" :class="{match: m.wikilangs.lang_match == lang}">
-                          <a class="wikilink" target="_blank" :href="'https://'+lang+'.wikipedia.org/wiki/'+l">[{{langFromCode(lang)}}] {{l}}</a>
-                        </li>
-                      </ul>
-                    </div>
-                  </b-col>
-                  <b-col key="colWikipedia" class="list-item" v-else>
-                    <div class="langlinks" style="margin-top: 1rem;">
-                      <ul><li>Entrée wikipédia non trouvée </li></ul>
-                    </div>
-                  </b-col>
-              </transition-group>
+          </div>
+          <div class="col scrollbox">
+            <strong v-if="m.showDetails">Liens Wikipédia</strong>
+            <ul v-if="filterWiki(wikiEntries(m)).length" class="list-unstyled mb-0">
+              <li v-for="[lang, title] in filterWiki(wikiEntries(m))" :key="lang" :class="{ 'fw-bold': m.wikilangs.lang_match === lang }">
+                <a :href="wikiUrl(lang, title)" target="_blank" rel="noopener">[{{ langFromCode(lang) }}] {{ title }}</a>
+              </li>
+            </ul>
+            <span v-else class="text-muted">Entrée Wikipédia non trouvée.</span>
+          </div>
+        </div>
+      </article>
+    </div>
 
-              <!-- </b-row>
-              -->
-            </b-container>
-            
-          </b-card-body>
-        </b-card>
-      </b-col>
-    </b-row>
-    <!-- <b-row v-else-if="fetching" class="justify-content-md-center">
-         <b-col sm="12" md="8" lg="6" xl="4">
-         <div class="alert alert-secondary">Recherche...</div>
-         </b-col>
-         </b-row> -->
-    <b-row v-else-if="error" class="justify-content-md-center">
-      <b-col sm="12" md="10" lg="8" xl="6">
-        <div class="alert alert-danger" v-html="error"></div>
-      </b-col>
-    </b-row>
-
-    <b-row style="position: sticky; bottom: 0; z-index: 9000;">
-      <b-pagination
-        class="pagination"
-        style="display: flex; justify-content: center;"
-        v-model="currentPage"
-        :total-rows="nMesh"
-        :per-page="perPage"
-      ></b-pagination>
-    </b-row>
-
-  </div>
+    <nav v-if="pageCount > 1" class="d-flex justify-content-center align-items-center gap-3 sticky-bottom bg-light p-2">
+      <button class="btn btn-sm btn-secondary" :disabled="currentPage === 1" @click="currentPage--">Précédent</button>
+      <span>{{ currentPage }} / {{ pageCount }}</span>
+      <button class="btn btn-sm btn-secondary" :disabled="currentPage === pageCount" @click="currentPage++">Suivant</button>
+    </nav>
+  </section>
 </template>
 
-<script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
-import axios from "axios";
+<script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { getJson, requestGate } from "@/api";
 import { langCodes } from "@/langCodes.js";
-import _ from "lodash";
 
-axios.defaults.baseURL = process.env.BASE_URL;
+type Option = { text: string; value: string | null };
+type Mesh = {
+  _id: string;
+  langs: Array<{ _id: string; pt: string; syns: string[] }>;
+  wikilangs: { origin?: string; lang_match?: string; term_match?: string; langs?: Record<string, string> };
+  showDetails?: boolean;
+};
+type MeshResponse = { count: number; data: Mesh[] };
 
-interface Mesh{
-  id: string;
-  title: string;
-  links: string[];
-  showDetails: boolean;
+const route = useRoute(), router = useRouter(), requests = requestGate();
+const perPage = 10, nMesh = ref(0), currentPage = ref(1), mesh = ref<Mesh[]>([]);
+const search = ref(String(route.query.search || "")), filterOnlyNonEmpty = ref(true);
+const fetching = ref(false), error = ref(""), metadataError = ref("");
+const showAdvancedSearch = ref(false), langMatchSearch = ref<string | null>(null), ptsynMatchSearch = ref<string | null>(null);
+const langSearch = ref<string | null>(null), langView = ref<string | null>(null), identifier = ref<string | null>(null);
+const langMesh = ref("all"), langWiki = ref("all"), languages = ref<string[]>([]), identifiers = ref<string[]>([]);
+
+const pageCount = computed(() => Math.max(1, Math.ceil(nMesh.value / perPage)));
+const langFromCode = (code: string) => langCodes.find((e: { code: string }) => e.code === code)?.name || code;
+const sortedLanguages = computed(() => [...languages.value].sort((a, b) => langFromCode(a).localeCompare(langFromCode(b))));
+const languageOptions = computed<Option[]>(() => [
+  { text: "Toutes les langues", value: null }, { text: "Toutes sauf anglais", value: "no-english" },
+  ...sortedLanguages.value.map(value => ({ text: langFromCode(value), value })),
+]);
+const viewLanguageOptions = computed(() => languageOptions.value.map(o => o.value === "no-english" ? { ...o, text: "Toutes sauf anglais" } : o));
+const wikiEntries = (m: Mesh) => Object.entries(m.wikilangs.langs || {});
+const filterWiki = (entries: [string, string][]) => langView.value === null ? entries : entries.filter(([lang]) => langView.value === "no-english" ? lang !== "en" : lang === langView.value);
+const wikiUrl = (lang: string, title: string) => `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title).replaceAll("%20", "_")}`;
+const matchInfo = (m: Mesh) => m.wikilangs.lang_match ? `match: (${langFromCode(m.wikilangs.lang_match)}) ${m.wikilangs.term_match || ""}` : "";
+
+async function fetchData() {
+  const request = requests.next();
+  fetching.value = true; error.value = "";
+  try {
+    const ans = await getJson<MeshResponse>("api/mesh", {
+      from: (currentPage.value - 1) * perPage, limit: perPage, search: search.value,
+      filterOnlyNonEmpty: filterOnlyNonEmpty.value, langMatchSearch: langMatchSearch.value,
+      ptsynMatchSearch: ptsynMatchSearch.value, langSearch: langSearch.value,
+      langMesh: langMesh.value, langWiki: langWiki.value, identifier: identifier.value,
+    }, request.signal);
+    if (!requests.isCurrent(request)) return;
+    nMesh.value = ans.count;
+    mesh.value = ans.data.map(m => ({ ...m, showDetails: false }));
+    if (currentPage.value > pageCount.value) currentPage.value = pageCount.value;
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") return;
+    if (requests.isCurrent(request)) error.value = e instanceof Error ? e.message : "Erreur de chargement";
+  } finally {
+    if (requests.isCurrent(request)) fetching.value = false;
+  }
 }
 
-@Component
-export default class Explorer extends Vue {
-  nMesh = 0;
-  perPage = 10;
-  currentPage = 1;
-  filterOnlyNonEmpty = true;
-  error = null;
-  fetching = false;
-  showAdvancedSearch = false;
-  langMatchSearch: string | null = null;
-  ptsynMatchSearch: string | null = null;
-  langView = null;
-  
-  languages: any[] = [];
-  
-  langSearch = null
-  langMesh = "all"
-  langMeshType = "all"
-  langWiki = "all"
-
-  identifier: null | string = null;
-  identifiers: string[] = [];
-  
-  get identifierOptions(){
-    const everything: any[] = [{text: "everything", value: null}];
-    return everything.concat(this.identifiers.map(e => {
-      return {
-        text: e,
-        value: e
-      }
-    }))
-  }
-  
-  get langMatchOptions(){
-    return [
-      {text: "all languages", value: null},
-      {text: "all except english", value: "no-english"},
-    ].concat(_.sortBy(
-      this.languages.map(e => {
-        return {
-          text: this.langFromCode(e),
-          value: e,
-        }
-      }),
-      [e => e.text.toLowerCase()]
-    ))
-  }
-  
-  
-  get langViewOptions(){
-    return [
-      {text: "all languages", value: null},
-      {text: "all languages except english", value: "no-english"},
-    ].concat(_.sortBy(
-      this.languages.map(e => {
-        return {
-          text: this.langFromCode(e),
-          value: e,
-        }
-      }),
-      [e => e.text.toLowerCase()]
-    ))
-  }
-  
-  filterWiki(langs){
-    if(this.langView == null){
-      return langs;
-    }else{
-      return langs.filter(([lang, l]) => (this.langView == "no-english" && lang != "en") || (lang == this.langView))
-    }
-  }
-  
-  ptsynMatchOptions = [
-    {
-      text: "PT + SYN",
-      value: null
-    }, {
-      text: "PT",
-      value: "pt"
-    }, {
-      text: "SYN",
-      value: "syn"
-    }
-  ]
-
-  mesh: Array<Mesh> = [];
-  search = "";
-  
-  toggleAdvancedSearch(){
-    this.showAdvancedSearch = !this.showAdvancedSearch;
-    localStorage.setItem("showAdvancedSearch",JSON.stringify(this.showAdvancedSearch))
-    if(!this.showAdvancedSearch){
-      this.ptsynMatchSearch = null;
-      this.langMatchSearch = null;
-      this.langView = null;
-    }
-  }
-  
-  toggleDetails(m){
-    m.showDetails=!m.showDetails
-    // console.log(m.showDetails)
-  }
-  
-  @Watch('ptsynMatchSearch')
-  ptsynchgd(v){
-    localStorage.setItem('ptsynMatchSearch', JSON.stringify(this.ptsynMatchSearch))
-  }
-  
-  @Watch('langMatchSearch')
-  langchgd(v){
-    localStorage.setItem('langMatchSearch', JSON.stringify(this.langMatchSearch))
-  }
-  
-
-  @Watch('currentPage')
-  cpchgd(v, oldv){
-    console.log(`current page changed ${oldv} -> ${v}`)
-    this.fetchData();
-  }
-  
-  @Watch('filterOnlyNonEmpty')
-  oechgd(v){
-    console.log('filter only nonempty changed')
-    this.currentPage = 1;
-    this.fetchData();
-  }
-  
-  matchInfo(m){
-    if(m.wikilangs){
-      return `match: (${this.langFromCode(m.wikilangs.lang_match)}) ${m.wikilangs.term_match}`
-    }
-  }
-  
-  langFromCode(c){
-    // console.log("LANGCODES")
-    // console.log(langCodes)
-    let lang = langCodes.find(e => e.code == c);
-    return (lang&&lang.name)?lang.name:c;
-  }
-
-  searchData(){
-    // this.currentPage = 1;
-    if(this.$route.query.search != this.search){
-      this.$router.replace({path: this.$route.path, query: {...this.$route.query, ...{search: this.search}}}).catch(console.log)
-    }
-    this.fetchData();
-  }
-  
-  fetchData(){
-    // this.mesh=[];
-    this.fetching = true;
-    this.error = null;
-    const page = this.currentPage;
-    console.log('CURRENTPAGE ' + page)
-    axios
-    .get("/api/mesh", {params: {
-      from: (page-1) * this.perPage,
-      limit: this.perPage,
-      search: this.search || null,
-      langMatchSearch: this.langMatchSearch,
-      ptsynMatchSearch: this.ptsynMatchSearch,
-      filterOnlyNonEmpty: this.filterOnlyNonEmpty,
-      langSearch: this.langSearch,
-      langMesh: this.langMesh,
-      langMeshType: this.langMeshType,
-      langWiki: this.langWiki,
-      identifier: this.identifier,
-    }})
-    .then(ans => {
-      console.log('MESH fetched')
-      console.log(ans.data)
-      this.nMesh = ans.data.count
-      this.fetching = false;
-      this.mesh = ans.data.data.map(e => {
-        e.showDetails = false;
-        e.wikilangs.langs = _.sortBy(Object.entries(e.wikilangs.langs || {}), [
-          ([k, v]) => this.langFromCode(k).toLowerCase()
-        ])
-        return e;
-      })
-    })
-    .catch(err => {
-      console.log(err);
-      this.fetching = false;
-      this.error=err.response.data;
-    });
-  }
-
-  fetchLanguages(){
-    axios.get('api/languages').then(e => {
-      this.languages = e.data;
-      console.log(this.languages)
-    }).catch(console.log)
-  }
-  
-  fetchIdentifiers(){
-    axios.get('api/identifiers').then(e => {
-      this.identifiers = e.data;
-      console.log(this.identifiers)
-    }).catch(console.log)
-  }
-  
-  tryParseLocalStorage(name){
-    const localval = localStorage.getItem(name);
-    if(localval){
-      try {
-        const ans = JSON.parse(localval)
-        console.log('LOCALSTORAGE SEARCHED ' + name)
-        console.log(ans)
-        return ans
-      } catch (error) {
-        console.error(error);
-        console.log('error localstorage decode '+name+' :')
-        console.log(localval)
-      }
-    }
-  }
-  
-  
-  mounted() {
-    this.search = (this.$route.query.search as string) || "";
-
-    this.showAdvancedSearch = this.tryParseLocalStorage("showAdvancedSearch") || this.showAdvancedSearch
-    this.ptsynMatchSearch = this.tryParseLocalStorage("ptsynMatchSearch") || this.ptsynMatchSearch
-    this.langMatchSearch = this.tryParseLocalStorage("langMatchSearch") || this.langMatchSearch
-    
-    console.log(this.$route)
-    this.fetchData();
-    this.fetchLanguages();
-    this.fetchIdentifiers();
-  }
-
+async function fetchMetadata() {
+  metadataError.value = "";
+  try {
+    [languages.value, identifiers.value] = await Promise.all([
+      getJson<string[]>("api/languages"), getJson<string[]>("api/identifiers"),
+    ]);
+  } catch (e) { metadataError.value = e instanceof Error ? e.message : "Filtres indisponibles"; }
 }
+
+function searchData() {
+  void router.replace({ query: search.value ? { search: search.value } : {} });
+  if (currentPage.value === 1) void fetchData(); else currentPage.value = 1;
+}
+function toggleAdvancedSearch() {
+  showAdvancedSearch.value = !showAdvancedSearch.value;
+  localStorage.setItem("showAdvancedSearch", JSON.stringify(showAdvancedSearch.value));
+  if (!showAdvancedSearch.value) {
+    langMatchSearch.value = ptsynMatchSearch.value = langSearch.value = langView.value = null;
+    langMesh.value = langWiki.value = "all";
+    searchData();
+  }
+}
+function stored<T>(name: string, fallback: T): T {
+  try { const value = localStorage.getItem(name); return value === null ? fallback : JSON.parse(value); }
+  catch { return fallback; }
+}
+
+watch(currentPage, fetchData);
+watch(filterOnlyNonEmpty, searchData);
+watch(langMatchSearch, v => localStorage.setItem("langMatchSearch", JSON.stringify(v)));
+watch(ptsynMatchSearch, v => localStorage.setItem("ptsynMatchSearch", JSON.stringify(v)));
+onMounted(() => {
+  showAdvancedSearch.value = stored("showAdvancedSearch", false);
+  langMatchSearch.value = stored("langMatchSearch", null);
+  ptsynMatchSearch.value = stored("ptsynMatchSearch", null);
+  void Promise.all([fetchMetadata(), fetchData()]);
+});
+onBeforeUnmount(requests.abort);
 </script>
 
 <style scoped>
-body {
-  background: #f7f7f7 !important;
-}
-.nav-tabs .nav-link.active {
-  background: #f9f9f9;
-}
-
-.btn.btn-outline-primary:hover {
-  background: rgb(244, 225, 250) !important;
-}
-.meshterm{
-  margin: 0.5rem 0.25rem;
-}
-
-.pill{
-  padding: 0.375rem 0.5rem;
-  border-radius: 0.2rem;
-  margin: 0.5rem 0.25rem;
-  font-size: 0.875rem;
-  text-align: center;
-  align: middle;
-  color: #222;
-}
-
-.pill-syn-pt{
-  background: #ada;
-}
-
-.id{
-  background: #ccc;
-}
-
-.loading{
-  color: #aaa;
-}
-
-a{
-  color: #222;
-}
-
-#explorer a.wikilink{
-  color: #222;
-}
-
-
-ul {
-  list-style-type: none;
-}
-
-.card-body{
-  padding: 0;
-}
-
-.card{
-  margin-bottom: 1rem;
-}
-
-.item-title{
-  background: #666;
-  color: #fff;
-  padding: 1rem;
-  border-radius: 0.25rem;
-  flex-wrap: wrap;
-  margin-bottom: 0;
-}
-
-.fetching{
-  opacity: 0.5 !important;
-}
-
-.show-details{
-  font-size: 0.9rem;
-  margin: 0.25rem;
-  padding: 0.5rem;
-  padding-top: 0.625rem;
-  border: 1px solid #444;
-  border-radius: 0.2rem;
-  background-color: #444;
-  color: #ddd;
-  cursor: pointer;
-}
-
-
-#explorer-intro p{
-  margin-bottom: 0;
-}
-
-#explorer-intro{
-  margin-bottom: 1rem;
-}
-
-.list-item {
-  display: inline-block;
-  background: white;
-  transition: all .5s;
-}
-
-.list-enter, .list-leave-to
-/* .list-complete-leave-active below version 2.1.8 */ {
-  opacity: 0;
-  /* transform: translateY(-30px); */
-}
-
-.list-leave-active {
-  position: absolute;
-}
-
-/*  ----------------  */
-
-.list-item-form {
-  transition: all .25s;
-}
-
-.list-form-enter, .list-form-leave-to{
-  opacity: 0;
-  transform: translateY(-30px);
-}
-
-.list-form-leave-active {
-  position: absolute;
-}
-
-/*  ----------------  */
-
-.conceptdetails{
-  background-color: #ddd;
-  padding: 1rem;
-  margin: 0;
-}
-
-.linksdetails{
-  padding: 1rem;
-  margin: 0;
-}
-
-.conceptdetails p{
-  margin-bottom: 0;
-}
-
-.row-item{
-  margin: 0;
-}
-
-.container-item{
-  padding: 0;
-}
-
-li.match a{
-  font-weight: 800;
-}
-
-.form{
-  background-color: #eee;
-  border: 1px solid #aaa;
-  padding: 1rem;
-  border-radius: 0.5rem;
-}
+.fetching { opacity: .55; }
+.scrollbox { max-height: 15rem; overflow: auto; }
+.sticky-bottom { bottom: 0; z-index: 10; }
 </style>

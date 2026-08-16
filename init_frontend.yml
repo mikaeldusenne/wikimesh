@@ -1,4 +1,3 @@
-version: '3'
 services:
-  vuecli:
-    command: "./init.sh"
+  frontend:
+    command: npm ci
