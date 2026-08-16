@@ -1,5 +1,6 @@
 services:
   mongo:
+    # Keep the existing data format until the deployed Mongo version is known.
     image: mongo:bionic
     networks:
       - wikimesh_network
@@ -17,7 +18,7 @@ services:
       timeout: 5s
       retries: 20
   redis:
-    image: redis:latest
+    image: redis:8.8.1-alpine
     networks:
       - wikimesh_network
     healthcheck:

@@ -6,8 +6,6 @@ import logging
 from os.path import join, dirname
 import json
 import re
-import numpy as np
-import pandas as pd
 import traceback
 from pprint import pprint
 from os import environ
