@@ -35,5 +35,7 @@ jobs:
       - run: npm test
       - run: docker build -t wikimesh-frontend:test .
       - run: sh -n ../run.sh
+      - run: bash -n ../mongo/upgrade.sh
+      - run: bash ../mongo/upgrade.sh --help >/dev/null
       - run: docker compose -f ../frontend.yml -f ../build-front-end.yml config
       - run: touch ../mongo/.env ../backend/.env && docker compose -f ../docker-compose.yml -f ../development.yml config
