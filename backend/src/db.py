@@ -4,6 +4,7 @@ from bson.json_util import loads, dumps
 import yaml
 from os import environ
 from pprint import pprint
+from threading import Lock
 from dotenv import load_dotenv
 
 from backend.src.pytypes import conv, V
@@ -15,26 +16,39 @@ if not 'MONGO_INITDB_DATABASE' in environ.keys():
     load_dotenv('mongo/.env', override=True)
     load_dotenv('mongo/.env.dev', override=True)
 
-def connect(
-        username=environ['MONGO_INITDB_ROOT_USERNAME'],
-        password=environ['MONGO_INITDB_ROOT_PASSWORD']):
-    global client, db, projects, users
-    client = MongoClient(host=environ['MONGO_HOST'],
-                         port=int(environ.get('MONGO_PORT', 27017)),
-                         username=username,
-                         password=password,
-                         authSource=environ['MONGO_INITDB_DATABASE']
-                         )
-    db = client[environ['MONGO_INITDB_DATABASE']]
+client = db = None
+_credentials = None
+_connect_lock = Lock()
+
+
+def connect(username=None, password=None):
+    """Connect on first use; explicit credential changes still reconnect."""
+    global client, db, _credentials
+    username = username or environ['MONGO_INITDB_ROOT_USERNAME']
+    password = password or environ['MONGO_INITDB_ROOT_PASSWORD']
+    credentials = (username, password)
+
+    if db is None or credentials != _credentials:
+        with _connect_lock:
+            if db is None or credentials != _credentials:
+                client = MongoClient(host=environ['MONGO_HOST'],
+                                     port=int(environ.get('MONGO_PORT', 27017)),
+                                     username=username,
+                                     password=password,
+                                     authSource=environ['MONGO_INITDB_DATABASE'],
+                                     serverSelectionTimeoutMS=5000
+                                     )
+                db = client[environ['MONGO_INITDB_DATABASE']]
+                _credentials = credentials
     return db
 
 
 def get_mesh_links(m):
-    return db.mesh.find_one({"_id": m['id']}, {"_id": 0, "links": 1})['links']
+    return connect().mesh.find_one({"_id": m['id']}, {"_id": 0, "links": 1})['links']
 
 
 def get_mesh(id):
-    ans = db.mesh.find_one({'_id': id})
+    ans = connect().mesh.find_one({'_id': id})
     if ans is not None:
         return V.decode(ans)
 
@@ -44,6 +58,7 @@ def bulk_insert(col, l):
 
 
 def create_indexes():
+    database = connect()
     # db.mesh.create_index(
     #     [
     #         ("_id", 1),
@@ -51,17 +66,17 @@ def create_indexes():
     #     ],
     #     unique=True
     # )
-    db.mesh.create_index(
+    database.mesh.create_index(
         [
             ("langs.pt", 1),
         ],
     )
-    db.wikimesh.create_index(
+    database.wikimesh.create_index(
         [
             ("lang_match", 1),
         ],
     )
-    db.wikimesh.create_index(
+    database.wikimesh.create_index(
         [
             ("origin", 1),
         ],
@@ -71,7 +86,7 @@ def create_indexes():
 
 
 def create_views():
-    db.command({
+    connect().command({
         "create": "mesh_view",
         "viewOn": "mesh", 
         "pipeline": [
@@ -90,7 +105,6 @@ def create_views():
     })
     # db.db.mesh_view.find_one()
 
-connect()
 
 if __name__ == "__main__":
     from sys import argv

@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify, redirect, flash, request, url_for, Response, Blueprint, send_from_directory
 import flask
 from flask_caching import Cache
+from redis import Redis
 import logging
 from os.path import join, dirname
 import json
@@ -18,13 +19,15 @@ from backend.src import wiki_fetcher as ftc
 from backend.src import mesh_parser
 from backend.src import db_exporter
 
+REDIS_URL = 'redis://redis'
 cache = Cache(config={
     # 'CACHE_TYPE': 'FileSystemCache', 'CACHE_DIR': '/.flask-cache', "CACHE_DEFAULT_TIMEOUT": 9999999
     'CACHE_TYPE': 'RedisCache',
-    'CACHE_REDIS_URL': 'redis://redis',
+    'CACHE_REDIS_URL': REDIS_URL,
     'CACHE_REDIS_PORT': '6379',
     "CACHE_DEFAULT_TIMEOUT": 9999999,
 })
+redis_client = Redis.from_url(REDIS_URL, socket_connect_timeout=2, socket_timeout=2)
 
 
 def logging_setup(path):
@@ -85,7 +88,7 @@ def _get_mesh(filter_non_empty, start, n, search, langMatchFilter, ptsynfilter, 
         aggmatch.update({
             "$or": [
                 {"langs": {"$elemMatch": {"pt": {'$regex': search_re}}}},
-                {'_id': {"$regex": search_re}}
+                {'_id': {'$regex': search_re}}
             ]
         })
     
@@ -188,12 +191,18 @@ def mesh_stats():
 
 @flsk.route("/status", methods=["GET"])
 def health_check():
-    logging.debug("debug log")
-    logging.info("info log")
-    logging.warning("warning log")
-    logging.error("error log")
-    # logging.exception("exception log")
     return "OK", 200
+
+
+@flsk.route("/ready", methods=["GET"])
+def readiness_check():
+    try:
+        db.connect().command("ping")
+        redis_client.ping()
+        return "OK", 200
+    except Exception:
+        logging.exception("readiness check failed")
+        return "NOT READY", 503
 
 
 @flsk.route('/', defaults={'path': ''})
@@ -209,7 +218,13 @@ app.register_blueprint(flsk, url_prefix=root_url)
 cache.init_app(app)
 
 
-db.connect()
+@app.before_request
+def ensure_db():
+    # Health endpoints own their dependency checks.
+    if request.endpoint not in {'bprnt.health_check', 'bprnt.readiness_check'}:
+        db.connect()
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     app.run(host="0.0.0.0", debug=True)

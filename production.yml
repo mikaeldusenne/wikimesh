@@ -1,9 +1,10 @@
-version: '3'
 services:
   app:
     command: "gunicorn -c backend/configunicorn.py --log-level debug backend.wsgi:app --access-logfile gunicorn.log"
   nginx:
-    depends_on: [app]
+    depends_on:
+      app:
+        condition: service_healthy
     networks:
       - wikimesh_network
     image: nginx
@@ -25,9 +26,9 @@ services:
     volumes:
       - ./mongo/mongobackup/backups:/backup
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
 
-      
 networks:
   wikimesh_network:
     driver: bridge
