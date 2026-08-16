@@ -191,7 +191,7 @@ def report_match_mesh_wiki(identifier):
         return acc
     
     summary = reduce(combine, l, {})
-    summary['overall'] = reduce(sumdicts, summary.values())
+    summary['overall'] = reduce(sumdicts, summary.values(), {})
     # summary['overall']
     return summary
 
