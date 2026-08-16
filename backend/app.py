@@ -34,10 +34,10 @@ def logging_setup(path):
 
     logFormatter = logging.Formatter(
         "%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-    # format='%(asctime)s\t%(name)s\t%(funcName)s\t%(levelname)s\t%(message)s'
+    # Production defaults to warnings; development stays verbose.
     rootLogger = logging.getLogger('wikimesh')
-    rootLogger.setLevel(logging.DEBUG if os.environ.get(
-        "PROD", False) else logging.WARNING)
+    rootLogger.setLevel(logging.WARNING if os.environ.get(
+        "PROD", False) else logging.DEBUG)
 
     fileHandler = logging.FileHandler(loggingdest)
     fileHandler.setFormatter(logFormatter)
@@ -240,5 +240,5 @@ if __name__ == '__main__':
 else:
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
-    app.logger.setLevel(logging.DEBUG)
+    app.logger.setLevel(logging.WARNING if os.environ.get("PROD") else logging.DEBUG)
     logging = app.logger
