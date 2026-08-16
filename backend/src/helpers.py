@@ -58,7 +58,6 @@ def dict_set_path(d, path, val):
         d[p] = dict_set_path(dt, ps, val)
     return d
     
-
 def subset_tree(tree, subsetter):
     d = {}
     for p in subsetter:
@@ -179,11 +178,8 @@ def replace_all(l, e, f):
 
 
 def prepare_user_input_search_regex(s):
-    print(s, re.escape(s))
-    return ".*" + ".*".join([
-        e for e in
-        "".join(replace_all(
-            s, ' ', lambda ee: not (ee.isalnum() or ee in " \\-_()")
-        )).strip()[:75].split(' ')
-        if len(e)
-    ]) + ".*"
+    # Keep historical tokenization, but make every token literal.
+    allowed = " -_()\\"
+    normalized = "".join(c if c.isalnum() or c in allowed else " " for c in s.strip()[:75])
+    tokens = normalized.split()
+    return ".*".join(map(re.escape, tokens)) if tokens else r"(?!)"
