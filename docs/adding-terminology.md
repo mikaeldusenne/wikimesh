@@ -9,11 +9,11 @@ This document describes the current pipeline as implemented by `backend/src/mesh
 A terminology concept is stored as:
 
 - a stable concept ID;
-- an `identifier` naming the terminology (`MeSH`, `ICD11`, `SNOMED`, ...);
+- an `identifier` naming the terminology (`MeSH`, `DECS`, `ICD11`, `SNOMED`, ...);
 - one preferred term (`pt`) per available language;
 - zero or more synonyms (`syns`) per language.
 
-For terminologies other than `MeSH`, the importer prefixes MongoDB `_id` values with the terminology identifier. For example, source ID `1234` imported with `-i ICD11` becomes `ICD11_1234`. This prevents IDs from two terminologies colliding in the shared collections.
+For terminologies other than `MeSH`, the importer prefixes MongoDB `_id` values with the terminology identifier. For example, source ID `1234` imported with `-i DECS` becomes `DECS_1234`. This prevents IDs from two terminologies colliding in the shared collections.
 
 ## 2. Prepare the CSV
 
@@ -65,7 +65,7 @@ backend/data/<terminology>.csv
 For example:
 
 ```text
-backend/data/icd11.csv
+backend/data/Decs_wikimesh.csv
 ```
 
 The source CSV is input data, not application state. Decide separately whether it should be committed, archived outside Git, or removed after the import depending on its license and provenance.
@@ -77,13 +77,34 @@ With the normal production stack running:
 ```bash
 sudo docker exec wikimesh_app \
   python -m backend.src.mesh_parser \
-  --identifier ICD11 \
-  /app/backend/data/icd11.csv
+  --identifier DECS \
+  /app/backend/data/Decs_wikimesh.csv
 ```
 
-Replace `ICD11` and the path with the terminology being added.
+`-i DECS` is equivalent to `--identifier DECS`.
 
 For a non-MeSH terminology, always pass `--identifier`. Omitting it would create an invalid/ambiguous identifier and ID prefix.
+
+### Historical DECS command
+
+The DECS dataset was imported in 2023 with a command recorded as:
+
+```bash
+python -m backend.src.mesh_parser \
+  --source flavien \
+  -i DECS \
+  backend/data/Decs_wikimesh.csv
+```
+
+The important parts of that command remain valid: the `DECS` identifier and the source CSV. The current `mesh_parser.py` no longer exposes a `--source` option, so **do not add `--source flavien` to current commands**. The current equivalent is simply:
+
+```bash
+python -m backend.src.mesh_parser \
+  -i DECS \
+  backend/data/Decs_wikimesh.csv
+```
+
+when running Python directly on a correctly configured host/dev environment, or the `docker exec` form above in the normal containerized deployment.
 
 ### Check the import
 
@@ -98,8 +119,8 @@ Then, in `mongosh`:
 ```javascript
 use thedb
 
-db.mesh.countDocuments({identifier: "ICD11"})
-db.mesh.findOne({identifier: "ICD11"})
+db.mesh.countDocuments({identifier: "DECS"})
+db.mesh.findOne({identifier: "DECS"})
 ```
 
 Check that:
@@ -117,7 +138,19 @@ Run:
 ```bash
 sudo docker exec wikimesh_app \
   python -m backend.src.db_feeder \
-  --identifier ICD11
+  --identifier DECS
+```
+
+or, in a correctly configured host/dev Python environment:
+
+```bash
+python -m backend.src.db_feeder -i DECS
+```
+
+This second form matches the DECS command that was actually used in 2023:
+
+```bash
+python -m backend.src.db_feeder -i DECS
 ```
 
 The normal, non-force mode only processes terminology concepts that do not yet have a corresponding document in `wikimesh`, so an interrupted first import can be resumed by running the same command again.
@@ -126,14 +159,32 @@ The feeder currently starts many worker processes and can generate substantial W
 
 Do **not** use `--force` for a routine rerun: the current writer uses inserts rather than safe replacement semantics for already-existing `_id` values.
 
+### Historical `data_fetcher` command
+
+The same 2023 shell history also contains:
+
+```bash
+python -m backend.src.data_fetcher
+```
+
+There is no `backend/src/data_fetcher.py` in the current codebase. Do not include this command in a new import procedure. The current Wikimedia-fetching stage is `backend.src.db_feeder`, which explicitly filters by terminology identifier and writes the resulting matches into `wikimesh`.
+
+The historical sequence also included:
+
+```bash
+./run.sh dev --build
+```
+
+That command rebuilt/restarted the development stack of the time. It is not part of the terminology data model and is not required between `mesh_parser` and `db_feeder` when the current application/container already sees the CSV and current code. Use it only when you independently need to rebuild the development environment.
+
 ## 7. Verify the generated matches
 
 In `mongosh`:
 
 ```javascript
-db.wikimesh.countDocuments({identifier: "ICD11"})
-db.wikimesh.findOne({identifier: "ICD11"})
-db.mesh_view.countDocuments({identifier: "ICD11"})
+db.wikimesh.countDocuments({identifier: "DECS"})
+db.wikimesh.findOne({identifier: "DECS"})
+db.mesh_view.countDocuments({identifier: "DECS"})
 ```
 
 `mesh_view` is a MongoDB view joining `mesh` and `wikimesh`, so it automatically exposes newly matched concepts; it does not need to be rebuilt for every terminology.
