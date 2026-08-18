@@ -1,7 +1,6 @@
 services:
   mongo:
-    # Keep the existing data format until the deployed Mongo version is known.
-    image: mongo:bionic
+    image: docker.io/library/mongo:8.3.8
     networks:
       - wikimesh_network
     container_name: "wikimesh_mongo_docker"
@@ -13,7 +12,7 @@ services:
       - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - "./mongo/.dbshell:/home/mongodb/.dbshell"
     healthcheck:
-      test: ["CMD", "mongo", "--quiet", "--eval", "db.runCommand({ping:1})"]
+      test: ["CMD", "mongosh", "--quiet", "--norc", "--eval", "db.runCommand({ping:1})"]
       interval: 5s
       timeout: 5s
       retries: 20
