@@ -63,10 +63,7 @@ logging_setup(".")
 
 ####################
 
-flsk = Blueprint(
-    'bprnt', __name__,
-    static_folder='./backend/static',
-)
+flsk = Blueprint('bprnt', __name__)
 
 
 def _int_arg(name, default, minimum=0, maximum=None):
@@ -219,11 +216,8 @@ def readiness_check():
 def index(path):
     return render_template('index.html')
 
-root_url = os.path.join('/', "wikimesh")
-static_url_path = os.path.join(root_url, "static")
-
-app = Flask(__name__, static_url_path=static_url_path)
-app.register_blueprint(flsk, url_prefix=root_url)
+app = Flask(__name__, static_url_path="/static")
+app.register_blueprint(flsk)
 cache.init_app(app)
 
 

@@ -48,7 +48,7 @@ services:
       - "./frontend/dist/static:/app/backend/static:ro"
     command: "python -m backend"
     healthcheck:
-      test: ["CMD", "python", "-c", "__import__('urllib.request').request.urlopen('http://127.0.0.1:5000/wikimesh/ready',timeout=3)"]
+      test: ["CMD", "python", "-c", "__import__('urllib.request').request.urlopen('http://127.0.0.1:5000/ready',timeout=3)"]
       interval: 10s
       timeout: 5s
       retries: 5
