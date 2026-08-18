@@ -13,7 +13,7 @@ services:
       - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - "./mongo/.dbshell:/home/mongodb/.dbshell"
     healthcheck:
-      test: ["CMD", "mongo", "--quiet", "--eval", "quit(db.adminCommand('ping').ok ? 0 : 2)"]
+      test: ["CMD", "mongo", "--quiet", "--eval", "db.runCommand({ping:1})"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -48,7 +48,7 @@ services:
       - "./frontend/dist/static:/app/backend/static:ro"
     command: "python -m backend"
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/wikimesh/ready', timeout=3)"]
+      test: ["CMD", "python", "-c", "__import__('urllib.request').request.urlopen('http://127.0.0.1:5000/wikimesh/ready',timeout=3)"]
       interval: 10s
       timeout: 5s
       retries: 5
