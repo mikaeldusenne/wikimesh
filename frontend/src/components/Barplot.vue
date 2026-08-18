@@ -1,26 +1,57 @@
 <template>
   <figure>
     <figcaption class="fw-bold mb-2">{{ title }}</figcaption>
-    <div v-for="([label, value]) in rows" :key="label" class="bar-row" :title="`${label}: ${value}`">
-      <span class="label">{{ label }}</span>
-      <span class="bar"><i :style="{ width: `${100 * value / max}%` }" /></span>
-      <span class="value">{{ value }}</span>
-    </div>
-    <small class="text-muted">{{ xtitle }} · {{ ytitle }}</small>
+    <div v-if="unavailable" class="alert alert-warning">Graphique Plotly indisponible.</div>
+    <div v-show="!unavailable" ref="plot" class="plot" />
   </figure>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-const props = defineProps<{ title: string; xtitle: string; ytitle: string; xdata: Array<string | number>; ydata: number[] }>();
-const rows = computed(() => props.xdata.map((x, i) => [String(x), props.ydata[i] || 0] as const));
-const max = computed(() => Math.max(1, ...props.ydata));
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+
+type PlotlyApi = {
+  react: (element: HTMLElement, data: unknown[], layout: Record<string, unknown>, config: Record<string, unknown>) => void;
+  purge: (element: HTMLElement) => void;
+};
+
+declare global { interface Window { Plotly?: PlotlyApi } }
+
+const props = defineProps<{
+  title: string;
+  xtitle: string;
+  ytitle: string;
+  xdata: Array<string | number>;
+  ydata: number[];
+}>();
+
+const plot = ref<HTMLElement>();
+const unavailable = ref(false);
+
+function draw() {
+  if (!plot.value) return;
+  if (!window.Plotly) {
+    unavailable.value = true;
+    return;
+  }
+  unavailable.value = false;
+  window.Plotly.react(
+    plot.value,
+    [{ type: "bar", x: props.xdata, y: props.ydata, hovertemplate: "%{x}: %{y}<extra></extra>" }],
+    {
+      autosize: true,
+      margin: { l: 70, r: 20, t: 10, b: 70 },
+      xaxis: { title: { text: props.xtitle }, automargin: true },
+      yaxis: { title: { text: props.ytitle }, automargin: true },
+    },
+    { responsive: true, displaylogo: false },
+  );
+}
+
+watch(() => [props.xdata, props.ydata, props.xtitle, props.ytitle], draw, { deep: true });
+onMounted(draw);
+onBeforeUnmount(() => { if (plot.value && window.Plotly) window.Plotly.purge(plot.value); });
 </script>
 
 <style scoped>
-.bar-row { display: grid; grid-template-columns: minmax(4rem, 9rem) 1fr 4rem; gap: .5rem; align-items: center; margin: .25rem 0; }
-.label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bar { height: .8rem; background: #ddd; }
-.bar i { display: block; height: 100%; background: #666; }
-.value { text-align: right; font-family: monospace; }
+.plot { min-height: 420px; width: 100%; }
 </style>
