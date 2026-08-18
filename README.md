@@ -10,6 +10,10 @@ https://wikimesh.mikaeldusenne.com/
 
 For backend-only development, `./run.sh backend` starts the base services with `development.yml` but leaves the frontend Compose overlay out.
 
+## Terminologies
+
+To add another multilingual terminology, follow [Adding a terminology](docs/adding-terminology.md). It documents the CSV contract, import/fetch pipeline, validation steps and current matching limitations.
+
 ## Backend dependency updates
 
 The backend runtime is pinned in `backend/Dockerfile` and CI. Direct dependencies live in `backend/requirements.txt`; deployments install `backend/requirements.lock`.
