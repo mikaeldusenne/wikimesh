@@ -457,7 +457,7 @@ ${userns:+$userns
 }    entrypoint: ["mongod"]
     command: ["--dbpath", "/data/db", "--auth", "--bind_ip_all"]
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand({ping:1}).ok ? 0 : 2)"]
+      test: ["CMD", "mongosh", "--quiet", "--norc", "--eval", "db.runCommand({ping:1})"]
       interval: 5s
       timeout: 5s
       retries: 20
