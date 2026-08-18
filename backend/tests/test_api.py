@@ -18,7 +18,7 @@ class ApiValidationTest(unittest.TestCase):
         )
         for query in queries:
             with self.subTest(query=query):
-                response = self.client.get(f"/wikimesh/api/mesh?{query}")
+                response = self.client.get(f"/api/mesh?{query}")
                 self.assertEqual(response.status_code, 400)
                 self.assertIn("error", response.get_json())
 
@@ -26,7 +26,7 @@ class ApiValidationTest(unittest.TestCase):
     @patch("backend.app.db.connect")
     def test_valid_query_is_normalized_and_forwarded(self, _connect, get_mesh):
         response = self.client.get(
-            "/wikimesh/api/mesh?from=0&limit=100&search=%20foo%20bar%20"
+            "/api/mesh?from=0&limit=100&search=%20foo%20bar%20"
             "&filterOnlyNonEmpty=true&langMatchSearch=no-english&ptsynMatchSearch=pt&langSearch=fr"
             "&langMesh=no&langWiki=yes&identifier=MeSH"
         )
@@ -47,7 +47,7 @@ class ApiValidationTest(unittest.TestCase):
     @patch("backend.app._get_mesh", return_value={"count": 0, "data": []})
     @patch("backend.app.db.connect")
     def test_language_presence_filters_default_to_all(self, _connect, get_mesh):
-        response = self.client.get("/wikimesh/api/mesh?langSearch=fr&limit=1")
+        response = self.client.get("/api/mesh?langSearch=fr&limit=1")
         self.assertEqual(response.status_code, 200)
         args = get_mesh.call_args.kwargs
         self.assertEqual((args["langMesh"], args["langWiki"]), ("all", "all"))
