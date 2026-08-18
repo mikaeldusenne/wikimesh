@@ -1,4 +1,8 @@
 services:
+  mongo:
+    volumes:
+      - "./mongo/prod-entrypoint.sh:/wikimesh-mongo-entrypoint.sh:ro"
+    entrypoint: ["bash", "/wikimesh-mongo-entrypoint.sh"]
   app:
     command: "gunicorn -c backend/configunicorn.py --log-level debug backend.wsgi:app --access-logfile gunicorn.log"
   nginx:
