@@ -46,7 +46,7 @@ case "$CMD" in
                 pass=$MONGO_INITDB_ROOT_PASSWORD
             ;;
         esac
-        docker exec -it wikimesh_mongo_docker mongo --username $user --password $pass
+        docker exec -it wikimesh_mongo_docker mongosh --username $user --password $pass
         ;;
     dev-venv-create)
         python -m venv venv && . ./venv/bin/activate \
